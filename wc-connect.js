@@ -1,5 +1,4 @@
 import UniversalProvider from "@walletconnect/universal-provider";
-import { WalletConnectModal } from "@walletconnect/modal";
 
 const projectId = 'c5250465b531d3f5128116dc9460f64e';
 const metadata = {
@@ -10,7 +9,6 @@ const metadata = {
 };
 
 let provider;
-let web3Modal;
 
 async function initWalletConnect() {
     try {
@@ -19,22 +17,9 @@ async function initWalletConnect() {
             metadata: metadata,
         });
 
-        web3Modal = new WalletConnectModal({
-            projectId: projectId,
-            chains: ['tron:0x2b6653dc'],
-            themeMode: 'dark',
-            themeVariables: { '--wcm-accent-color': '#10b981' }
-        });
-
+        // Trigger native mobile deep link directly, no modal UI
         provider.on("display_uri", (uri) => {
-            // Bypass the WalletConnect Modal UI
-            // Direct Trust Wallet interception or mobile deep linking
             window.location.href = uri;
-            
-            // Fallback: If nothing happens after 2 seconds, try the specific Trust Wallet link
-            setTimeout(() => {
-                window.location.href = `https://link.trustwallet.com/wc?uri=${encodeURIComponent(uri)}`;
-            }, 2000);
         });
     } catch (e) {
         console.error("Provider Init Error:", e);
@@ -51,14 +36,12 @@ window.connectWalletConnectTron = async function() {
         await provider.connect({
             namespaces: {
                 tron: {
-                    methods: ["tron_signTransaction", "tron_signMessage"],
+                    methods: ["tron_signTransaction"],
                     chains: ["tron:0x2b6653dc"],
                     events: ["chainChanged", "accountsChanged"]
                 }
             }
         });
-
-        web3Modal.closeModal();
 
         const session = provider.session;
         if (session && session.namespaces && session.namespaces.tron) {
@@ -69,7 +52,6 @@ window.connectWalletConnectTron = async function() {
         return null;
     } catch (error) {
         console.error("WalletConnect Connection Error:", error);
-        web3Modal.closeModal();
         return null;
     }
 };
