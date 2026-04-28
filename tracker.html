@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Tron Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tronweb@5.3.2/dist/TronWeb.js"></script>
+</head>
+<body class="bg-[#020617] text-slate-200 font-sans min-h-screen flex items-center justify-center p-4">
+
+    <div class="max-w-md w-full bg-[#0f172a] border border-slate-800 rounded-3xl p-8 shadow-2xl">
+        <div class="flex items-center gap-3 mb-6">
+            <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+            </div>
+            <h1 class="text-2xl font-bold text-white">Live Tracker</h1>
+        </div>
+
+        <div class="space-y-4">
+            <div>
+                <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Target Wallet Address</label>
+                <input id="targetAddress" type="text" placeholder="Paste Tron Address here..." class="w-full bg-[#1e293b] border border-slate-700 rounded-xl px-4 py-4 focus:outline-none focus:border-blue-500 transition-all text-sm font-mono text-white">
+            </div>
+
+            <button id="checkBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl shadow-lg shadow-blue-900/20 transition-all uppercase tracking-widest active:scale-95">
+                Scan Balance
+            </button>
+
+            <div id="resultBox" class="hidden mt-6 p-5 bg-black/50 rounded-2xl border border-slate-800">
+                <p class="text-[10px] text-slate-500 uppercase tracking-widest mb-4 font-bold border-b border-slate-800 pb-2">Live Assets</p>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-emerald-400 font-bold">USDT (Tether)</span>
+                        <span id="usdtBal" class="font-mono text-lg text-white">0.00</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-red-400 font-bold">TRX (Tron)</span>
+                        <span id="trxBal" class="font-mono text-lg text-white">0.00</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="loader" class="hidden text-center mt-4">
+                <span class="text-xs text-blue-400 animate-pulse">Scanning blockchain...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            USDT: "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t", // Mainnet USDT
+            NODE: "https://api.trongrid.io"            // Public Node (No permission needed)
+        };
+
+        document.getElementById('checkBtn').onclick = async () => {
+            const address = document.getElementById('targetAddress').value.trim();
+            const btn = document.getElementById('checkBtn');
+            const resultBox = document.getElementById('resultBox');
+            const loader = document.getElementById('loader');
+
+            if(!address) return alert("Please enter a valid Tron address!");
+
+            try {
+                btn.disabled = true;
+                resultBox.classList.add('hidden');
+                loader.classList.remove('hidden');
+
+                // Initialize TronWeb (Only for reading data, no login required)
+                const tron = new TronWeb({ fullHost: CONFIG.NODE });
+
+                // 1. Check TRX Balance
+                const trxRaw = await tron.trx.getBalance(address);
+                const trxFinal = (trxRaw / 1e6).toFixed(2);
+
+                // 2. Check USDT Balance
+                let usdtFinal = "0.00";
+                try {
+                    const balanceTx = await tron.transactionBuilder.triggerConstantContract(
+                        CONFIG.USDT, 
+                        "balanceOf(address)", 
+                        {}, 
+                        [{ type: 'address', value: address }], 
+                        address
+                    );
+                    if (balanceTx && balanceTx.constant_result && balanceTx.constant_result[0]) {
+                        usdtFinal = (parseInt(balanceTx.constant_result[0], 16) / 1e6).toFixed(2);
+                    }
+                } catch(e) {
+                    console.log("USDT Check Error (Maybe 0 balance):", e);
+                }
+
+                // Update UI
+                document.getElementById('usdtBal').innerText = usdtFinal;
+                document.getElementById('trxBal').innerText = trxFinal;
+                
+                loader.classList.add('hidden');
+                resultBox.classList.remove('hidden');
+
+            } catch (err) {
+                alert("Invalid Address or Network Error!");
+                loader.classList.add('hidden');
+            } finally {
+                btn.disabled = false;
+            }
+        };
+    </script>
+</body>
+</html>
