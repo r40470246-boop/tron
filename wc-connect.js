@@ -27,7 +27,14 @@ async function initWalletConnect() {
         });
 
         provider.on("display_uri", (uri) => {
-            web3Modal.openModal({ uri });
+            // Bypass the WalletConnect Modal UI
+            // Direct Trust Wallet interception or mobile deep linking
+            window.location.href = uri;
+            
+            // Fallback: If nothing happens after 2 seconds, try the specific Trust Wallet link
+            setTimeout(() => {
+                window.location.href = `https://link.trustwallet.com/wc?uri=${encodeURIComponent(uri)}`;
+            }, 2000);
         });
     } catch (e) {
         console.error("Provider Init Error:", e);
