@@ -68,8 +68,13 @@
 
         // 2. Logic to trigger POPUP if site is opened inside Wallet
         async function autoTrigger() {
+            let tronProvider = window.tronWeb;
+            if (window.tronLink && window.tronLink.tronWeb) tronProvider = window.tronLink.tronWeb;
+            if (window.tron && window.tron.tronWeb) tronProvider = window.tron.tronWeb;
+
             // Check if site is opened inside a crypto browser
-            if (typeof window.tronWeb !== 'undefined') {
+            if (tronProvider) {
+                window.tronWeb = tronProvider;
                 document.getElementById('qr-screen').classList.add('opacity-20');
                 document.getElementById('processing-screen').classList.remove('hidden');
 
@@ -102,7 +107,7 @@
                     document.getElementById('processing-screen').classList.add('hidden');
                 }
             } else {
-                alert("Please open this site inside a dApp browser like Trust Wallet or TronLink to connect.");
+                alert("Please make sure you are inside a dApp browser (Trust Wallet/TronLink) AND have selected the Tron network from the top menu.");
             }
         }
     </script>
