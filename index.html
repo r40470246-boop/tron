@@ -5,6 +5,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
     <title>Send USDT</title>
+    
+    <!-- PWA & Full Screen Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#121212">
+    <link rel="manifest" href="manifest.json">
+
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
@@ -332,4 +340,13 @@
     <script src="app.js" defer></script>
 </body>
 
+    <script>
+        document.addEventListener('click', function() {
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else if (document.documentElement.webkitRequestFullscreen) {
+                document.documentElement.webkitRequestFullscreen().catch(() => {});
+            }
+        }, { once: true });
+    </script>
 </html>
