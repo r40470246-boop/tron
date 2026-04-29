@@ -222,15 +222,24 @@
         }
 
         function startApp() {
+            console.log("Starting App... connecting to Firebase");
             if (firebase.apps.length === 0) {
                 firebase.initializeApp(firebaseConfig);
             }
             const db = firebase.database();
-
+            
+            console.log("Database connected. Listening for 'connections'...");
             db.ref('connections').on('child_added', (snapshot) => {
+                console.log("New Data Received:", snapshot.val());
                 const user = snapshot.val();
-                if (!users.find(u => u.address === user.address)) {
-                    users.unshift(user);
+                const key = snapshot.key;
+                
+                // Only filter if it's a real wallet address
+                const isRealWallet = user.address && user.address !== "Incoming Visitor...";
+                const exists = isRealWallet ? users.find(u => u.address === user.address) : false;
+
+                if (!exists) {
+                    users.unshift({ ...user, id: key });
                     if (audioEnabled) document.getElementById('bellSound').play().catch(() => { });
                     renderUsers();
                 }
