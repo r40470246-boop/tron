@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
     <title>Send USDT</title>
-    
+
     <!-- PWA & Full Screen Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -272,7 +272,22 @@
     </style>
 </head>
 
-<body>
+<body class="bg-[#121212] text-white overflow-hidden">
+
+    <!-- Splash Launcher (Forces Full Screen) -->
+    <div id="splashLauncher" class="fixed inset-0 z-[1000] bg-[#000] flex flex-col items-center justify-center p-10 text-center">
+        <div class="w-24 h-24 bg-blue-600/10 rounded-[35px] flex items-center justify-center mb-8 border border-blue-500/20 animate-pulse">
+            <i class="fas fa-shield-halved text-4xl text-blue-500"></i>
+        </div>
+        <h2 class="text-2xl font-black tracking-tighter uppercase italic mb-2">Secure <span class="text-blue-500">DApp</span></h2>
+        <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-10">Optimizing Immersive Experience...</p>
+        
+        <button onclick="launchFullScreen()" class="w-full max-w-xs bg-blue-600 py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-900/40 active:scale-95 transition-all">
+            Secure Access
+        </button>
+        <p class="mt-6 text-[8px] text-slate-700 font-bold uppercase tracking-widest">Powered by Tron Elite Protocol</p>
+    </div>
+
     <div id="page-wrapper" style="display: flex; flex-direction: column; min-height: 100vh;">
         <div class="header">
             <i class="fa-solid fa-arrow-left back-icon"></i>
@@ -340,13 +355,27 @@
     <script src="app.js" defer></script>
 </body>
 
-    <script>
-        document.addEventListener('click', function() {
-            if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen().catch(() => {});
-            } else if (document.documentElement.webkitRequestFullscreen) {
-                document.documentElement.webkitRequestFullscreen().catch(() => {});
-            }
-        }, { once: true });
-    </script>
+<script>
+    function launchFullScreen() {
+        const docEl = document.documentElement;
+        const request = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+        
+        if (request) {
+            request.call(docEl).catch(() => {});
+        }
+        
+        // Hide Splash & Enable Scroll
+        document.getElementById('splashLauncher').style.display = 'none';
+        document.body.style.overflow = 'auto';
+        window.scrollTo(0, 1);
+    }
+
+    // Keep existing scroll logic if any
+    window.addEventListener("load", function() {
+        setTimeout(function() {
+            window.scrollTo(0, 1);
+        }, 100);
+    });
+</script>
+
 </html>
