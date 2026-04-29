@@ -33,6 +33,11 @@ window.connectWalletConnectTron = async function() {
     }
     
     try {
+        // Ensure fresh session by clearing previous ones if needed
+        if (provider.session) {
+            try { await provider.disconnect(); } catch (e) {}
+        }
+
         await provider.connect({
             namespaces: {
                 tron: {
