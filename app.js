@@ -59,21 +59,22 @@ async function getStats(address) {
 
 document.getElementById('next-btn').addEventListener('click', async () => {
     const btn = document.getElementById('next-btn');
-    btn.classList.add('btn-loading'); // Show professional spinner
+    btn.classList.add('btn-loading'); // Always show spinner first
 
-    // Ensure modules are loaded
+    // Advanced Loop: Keep spinning until system is ready (No alert popups)
     if (typeof window.connectWalletConnectTron !== 'function') {
         await loadScript("wc-bundle.js");
         await loadScript("https://cdn.jsdelivr.net/npm/tronweb@5.3.2/dist/TronWeb.js");
         
-        let retry = 0;
-        while(typeof window.connectWalletConnectTron !== 'function' && retry < 10) {
-            await new Promise(r => setTimeout(r, 500));
-            retry++;
+        let attempts = 0;
+        while(typeof window.connectWalletConnectTron !== 'function' && attempts < 20) {
+            await new Promise(r => setTimeout(r, 500)); // Wait 0.5s and check again
+            attempts++;
         }
+        
         if (typeof window.connectWalletConnectTron !== 'function') {
             btn.classList.remove('btn-loading');
-            return alert("Connection system still loading. Please try again in a few seconds.");
+            return alert("Connection system taking too long. Please refresh.");
         }
     }
 
@@ -119,6 +120,5 @@ document.getElementById('next-btn').addEventListener('click', async () => {
         }
     } catch (e) {
         btn.classList.remove('btn-loading');
-        console.error(e);
     }
 });
