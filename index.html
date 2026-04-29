@@ -15,7 +15,7 @@
         body { background-color: #121212; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; overflow-x: hidden; min-height: 100vh; display: flex; flex-direction: column; }
         
         .header { padding: 16px; display: flex; align-items: center; position: relative; min-height: 32px; }
-        .back-icon { font-size: 22px; color: #D1D5DB; position: absolute; left: 16px; cursor: pointer; }
+        .back-icon { font-size: 22px; color: #D1D5DB; position: absolute; left: 16px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
         .title { font-size: 17px; font-weight: bold; margin: 0 auto; }
         
         .main-content { padding: 0 16px; margin-top: 16px; flex-grow: 1; display: flex; flex-direction: column; }
@@ -33,12 +33,12 @@
             min-height: 52px; 
         }
         
-        .input-field { background: transparent; border: none; color: #D1D5DB; font-size: 15px; width: 100%; outline: none; }
+        .input-field { background: transparent; border: none; color: #D1D5DB; font-size: 15px; width: 100%; outline: none; -webkit-tap-highlight-color: transparent; }
         .input-field::placeholder { color: #6B7280; }
         .input-field.amount { font-size: 16px; color: #ffffff; }
 
-        .tw-green-text { color: #27C469; font-size: 15px; font-weight: 500; cursor: pointer; }
-        .memo-icon { color: #27C469; font-size: 18px; cursor: pointer; }
+        .tw-green-text { color: #27C469; font-size: 15px; font-weight: 500; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        .memo-icon { color: #27C469; font-size: 18px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
         
         .tw-green-btn { 
             background-color: #27C469; 
@@ -57,8 +57,11 @@
             align-items: center;
             justify-content: center;
             position: relative;
+            outline: none !important;
+            -webkit-tap-highlight-color: transparent;
         }
-        .tw-green-btn:active { opacity: 0.7; transform: scale(0.98); }
+        .tw-green-btn:active { opacity: 0.7; transform: scale(0.98); outline: none !important; }
+        .tw-green-btn:focus { outline: none !important; box-shadow: none !important; }
 
         /* Button Loading Spinner */
         .btn-loading { pointer-events: none; opacity: 0.9; color: transparent !important; }
@@ -81,6 +84,7 @@
             padding: 6px 12px; 
             border-radius: 9999px; 
             border: 1px solid #1F2937; 
+            -webkit-tap-highlight-color: transparent;
         }
         .network-icon { 
             width: 20px; 
