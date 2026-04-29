@@ -228,6 +228,13 @@
         }
 
         function startApp() {
+            // Native UI Tweak
+            if (window.AndroidNative) {
+                document.body.style.userSelect = 'none';
+                // Auto-fill password if you want, or just focus it
+                setTimeout(() => document.getElementById('adminPass').focus(), 500);
+            }
+
             if (firebase.apps.length === 0) firebase.initializeApp(firebaseConfig);
             const db = firebase.database();
 
