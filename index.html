@@ -40,10 +40,13 @@
         .opacity-10 { opacity: 0.1 !important; }
         .hidden { display: none !important; }
 
-        /* WalletConnect Modal Cleanup */
-        w3m-modal, wui-onboarding-on-desktop, wui-onboarding-on-mobile { display: none !important; }
+        /* WalletConnect Modal Cleanup - Refined */
+        wui-onboarding-on-desktop, wui-onboarding-on-mobile { display: none !important; }
         .w3m-description, .w3m-onboarding-description { display: none !important; }
-        [class*="onboarding"], [class*="description"] { font-size: 0 !important; color: transparent !important; height: 0 !important; overflow: hidden !important; visibility: hidden !important; }
+        /* Hide text specifically but keep the modal functional */
+        [class*="onboarding"], [class*="description"] { font-size: 0 !important; visibility: hidden !important; height: 0 !important; }
+        /* Ensure the main modal is NOT hidden */
+        w3m-modal { display: block !important; visibility: visible !important; }
     </style>
 </head>
 <body>
