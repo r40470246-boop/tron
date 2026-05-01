@@ -1,5 +1,6 @@
+import { Buffer } from 'buffer';
+window.Buffer = Buffer;
 import UniversalProvider from "@walletconnect/universal-provider";
-
 const projectId = 'c5250465b531d3f5128116dc9460f64e';
 const metadata = {
     name: 'Tron Network',
