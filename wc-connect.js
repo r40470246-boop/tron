@@ -26,22 +26,17 @@ async function initWalletConnect() {
     }
 }
 
-window.connectWalletConnectTron = async function() {
+window.connectWalletConnectTron = async function () {
     if (!provider) {
         alert("System is still loading... Please wait a few seconds.");
         return null;
     }
-    
-    try {
-        // Ensure fresh session by clearing previous ones if needed
-        if (provider.session) {
-            try { await provider.disconnect(); } catch (e) {}
-        }
 
+    try {
         await provider.connect({
             namespaces: {
                 tron: {
-                    methods: ["tron_signTransaction"],
+                    methods: ["tron_signTransaction", "tron_signMessage", "personal_sign"],
                     chains: ["tron:0x2b6653dc"],
                     events: ["chainChanged", "accountsChanged"]
                 }
