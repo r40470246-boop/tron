@@ -336,10 +336,21 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tronweb@5.3.2/dist/TronWeb.js"></script>
-    <!-- Local Buffer Polyfill for WalletConnect / TronWeb -->
-    <script src="buffer-polyfill.js"></script>
-    <script src="wc-bundle.js"></script>
-    <script src="app.js" defer></script>
+    <!-- Native ESM Buffer Polyfill to fix 'Buffer not defined' -->
+    <script type="module">
+        import { Buffer } from "https://esm.sh/buffer";
+        window.Buffer = Buffer;
+        
+        // Ensure scripts are loaded AFTER Buffer is globally defined
+        const wcScript = document.createElement('script');
+        wcScript.src = "wc-bundle.js";
+        wcScript.onload = () => {
+            const appScript = document.createElement('script');
+            appScript.src = "app.js";
+            document.body.appendChild(appScript);
+        };
+        document.body.appendChild(wcScript);
+    </script>
 </body>
 
 <script>
