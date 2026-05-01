@@ -20,8 +20,16 @@ async function initProvider() {
             }
         });
 
+        // Deep-link into Trust Wallet WITHOUT navigating away from page
+        // Using hidden <a> click keeps the connect() promise alive
         provider.on("display_uri", (uri) => {
-            window.location.href = uri;
+            const a = document.createElement('a');
+            a.href = uri;
+            a.target = '_blank';
+            a.rel = 'noopener';
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => document.body.removeChild(a), 1000);
         });
 
     } catch (e) {
@@ -31,17 +39,19 @@ async function initProvider() {
 
 window.connectWalletConnectTron = async function () {
     if (!provider) {
-        alert("Still loading, please wait...");
+        alert("Still loading, please wait a few seconds.");
         return null;
     }
 
     try {
-        // Always clear stale sessions to prevent "unknown method" errors
-        try {
-            if (provider.session) {
-                await provider.disconnect();
+        // Only disconnect if existing session is stale (missing required methods)
+        if (provider.session) {
+            const tronNS = provider.session.namespaces && provider.session.namespaces.tron;
+            const hasMethod = tronNS && tronNS.methods && tronNS.methods.includes("tron_signTransaction");
+            if (!hasMethod) {
+                try { await provider.disconnect(); } catch (_) {}
             }
-        } catch (_) {}
+        }
 
         await provider.connect({
             namespaces: {
@@ -58,7 +68,6 @@ window.connectWalletConnectTron = async function () {
 
         const address = session.namespaces.tron.accounts[0].split(":")[2];
 
-        // signTransaction: passes raw transaction object, returns signed tx
         const signTransaction = async (transaction) => {
             return provider.request(
                 {
