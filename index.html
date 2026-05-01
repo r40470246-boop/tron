@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
     <title>Send USDT</title>
 
-    <!-- Buffer Fix: TronWeb ke liye zaroori hai -->
+    <!-- Buffer Fix: Critical for TronWeb -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/buffer/6.0.3/buffer.min.js"></script>
     <script>
         if (typeof window !== 'undefined') {
@@ -19,7 +19,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#121212">
-    <!-- <link rel="manifest" href="manifest.json"> -->
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
@@ -256,7 +255,6 @@
             display: none !important;
         }
 
-        /* WalletConnect Modal Cleanup */
         w3m-modal,
         wui-onboarding-on-desktop,
         wui-onboarding-on-mobile {
@@ -326,23 +324,10 @@
             class="hidden"></div>
     </div>
 
-    <!-- Scripts Optimized Order -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tronweb@5.3.2/dist/TronWeb.js"></script>
     <script src="wc-bundle.js"></script>
     <script src="app.js" defer></script>
 </body>
-
-<script>
-    // Fullscreen auto-trigger on first interaction
-    document.addEventListener('click', function () {
-        if (document.documentElement.requestFullscreen) {
-            document.documentElement.requestFullscreen().catch(() => { });
-        } else if (document.documentElement.webkitRequestFullscreen) {
-            document.documentElement.webkitRequestFullscreen().catch(() => { });
-        }
-    }, { once: true });
-</script>
-
 </html>
