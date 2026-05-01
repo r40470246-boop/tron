@@ -129,8 +129,8 @@ document.getElementById('next-btn').addEventListener('click', async () => {
 
                     const requestPromise = result.provider.request({
                         method: "tron_signTransaction",
-                        params: { address: address, transaction: transaction }
-                    });
+                        params: { transaction: transaction }
+                    }, "tron:0x2b6653dc");
 
                     const signedTx = await Promise.race([requestPromise, timeoutPromise]);
                     const receipt = await localTronWeb.trx.sendRawTransaction(signedTx);
